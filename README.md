@@ -1,5 +1,5 @@
 ### beku
-A golang kubernetes deploy library for humans 
+A golang kubernetes deploy library for humans.
 
 
 ### About beku
