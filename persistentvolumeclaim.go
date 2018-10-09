@@ -12,163 +12,163 @@ import (
 
 // PersistentVolumeClaim include kubernetes resource object
 type PersistentVolumeClaim struct {
-	v1  *v1.PersistentVolumeClaim
+	pvc  *v1.PersistentVolumeClaim
 	err error
 }
 
-// NewPVC create pvc
+// Newobj create pvc
 func NewPVC() *PersistentVolumeClaim {
 	return &PersistentVolumeClaim{
-		v1: &v1.PersistentVolumeClaim{},
+		pvc: &v1.PersistentVolumeClaim{},
 	}
 }
 
-// SetName set pvc name
-func (pvc *PersistentVolumeClaim) SetName(name string) *PersistentVolumeClaim {
-	pvc.v1.SetName(name)
-	return pvc
+// SetNametae set pvc name
+func (obj *PersistentVolumeClaim) SetName(name string) *PersistentVolumeClaim {
+	obj.pvc.SetName(name)
+	return obj
 }
 
 // SetNameSpace set  pvc namespace,default namespace is default
-func (pvc *PersistentVolumeClaim) SetNameSpace(namespace string) *PersistentVolumeClaim {
-	pvc.v1.SetNamespace(namespace)
-	return pvc
+func (obj *PersistentVolumeClaim) SetNameSpace(namespace string) *PersistentVolumeClaim {
+	obj.pvc.SetNamespace(namespace)
+	return obj
 }
 
 // SetLabels set pvc label
-func (pvc *PersistentVolumeClaim) SetLabels(labels map[string]string) *PersistentVolumeClaim {
-	pvc.v1.SetLabels(labels)
-	return pvc
+func (obj *PersistentVolumeClaim) SetLabels(labels map[string]string) *PersistentVolumeClaim {
+	obj.pvc.SetLabels(labels)
+	return obj
 }
 
 // SetAnnotations set annotation
-func (pvc *PersistentVolumeClaim) SetAnnotations(annotations map[string]string) *PersistentVolumeClaim {
-	pvc.v1.SetAnnotations(annotations)
-	return pvc
+func (obj *PersistentVolumeClaim) SetAnnotations(annotations map[string]string) *PersistentVolumeClaim {
+	obj.pvc.SetAnnotations(annotations)
+	return obj
 }
 
-// SetPVCAccessMode set pvc accessMode
-func (pvc *PersistentVolumeClaim) SetPVCAccessMode(mode core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
-	pvc.v1.Spec.AccessModes = []v1.PersistentVolumeAccessMode{mode.ToK8s()}
-	return pvc
+// SetobjAccessMode set pvc accessMode
+func (obj *PersistentVolumeClaim) SetPVCAccessMode(mode core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
+	obj.pvc.Spec.AccessModes = []v1.PersistentVolumeAccessMode{mode.ToK8s()}
+	return obj
 }
 
-// SetPVCAccessModes set pvc accessModes
-func (pvc *PersistentVolumeClaim) SetPVCAccessModes(modes []core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
-	var pvcModes []v1.PersistentVolumeAccessMode
+// SetobjAccessModes set pvc accessModes
+func (obj *PersistentVolumeClaim) SetPVCAccessModes(modes []core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
+	var objModes []v1.PersistentVolumeAccessMode
 	for _, m := range modes {
-		pvcModes = append(pvcModes, m.ToK8s())
+		objModes = append(objModes, m.ToK8s())
 	}
-	pvc.v1.Spec.AccessModes = pvcModes
-	return pvc
+	obj.pvc.Spec.AccessModes = objModes
+	return obj
 }
 
 // SetVolumeMode pvc vloume mode,have Block and Filesystem  mode
-func (pvc *PersistentVolumeClaim) SetVolumeMode(volumeMode core.PersistentVolumeMode) *PersistentVolumeClaim {
+func (obj *PersistentVolumeClaim) SetVolumeMode(volumeMode core.PersistentVolumeMode) *PersistentVolumeClaim {
 	m := volumeMode.ToK8s()
 	if m == nil {
-		pvc.err = fmt.Errorf("set volumeMode err: this volumeMode not allow %v", volumeMode)
+		obj.err = fmt.Errorf("set volumeMode err: this volumeMode not allow %v", volumeMode)
 	}
-	pvc.v1.Spec.VolumeMode = m
-	return pvc
+	obj.pvc.Spec.VolumeMode = m
+	return obj
 }
 
 // SetResourceLimit set pvc resource limit
-func (pvc *PersistentVolumeClaim) SetResourceLimit(limits map[core.ResourceName]string) *PersistentVolumeClaim {
+func (obj *PersistentVolumeClaim) SetResourceLimit(limits map[core.ResourceName]string) *PersistentVolumeClaim {
 	data, err := core.ResourceMapsToK8s(limits)
 
 	if err != nil {
-		pvc.err = fmt.Errorf("limit set err:%v", err)
-		return pvc
+		obj.err = fmt.Errorf("limit set err:%v", err)
+		return obj
 	}
-	pvc.v1.Spec.Resources.Limits = data
-	return pvc
+	obj.pvc.Spec.Resources.Limits = data
+	return obj
 }
 
 // SetResourceRequests set pvc reource requests
-func (pvc *PersistentVolumeClaim) SetResourceRequests(requests map[core.ResourceName]string) *PersistentVolumeClaim {
+func (obj *PersistentVolumeClaim) SetResourceRequests(requests map[core.ResourceName]string) *PersistentVolumeClaim {
 	data, err := core.ResourceMapsToK8s(requests)
 	if err != nil {
-		pvc.err = fmt.Errorf("request set err:%v", err)
-		return pvc
+		obj.err = fmt.Errorf("request set err:%v", err)
+		return obj
 	}
-	pvc.v1.Spec.Resources.Requests = data
-	return pvc
+	obj.pvc.Spec.Resources.Requests = data
+	return obj
 }
 
 // SetStorageClassName set storageclasss name
-func (pvc *PersistentVolumeClaim) SetStorageClassName(classname string) *PersistentVolumeClaim {
+func (obj *PersistentVolumeClaim) SetStorageClassName(classname string) *PersistentVolumeClaim {
 	if classname == "" || len(classname) <= 0 {
-		pvc.err = errors.New("set StorageClassName is empty,set failed")
-		return pvc
+		obj.err = errors.New("set StorageClassName is empty,set failed")
+		return obj
 	}
-	pvc.v1.Spec.StorageClassName = &classname
-	return pvc
+	obj.pvc.Spec.StorageClassName = &classname
+	return obj
 }
 
 // SetSelector set pvc selector
-func (pvc *PersistentVolumeClaim) SetSelector(labels map[string]string) *PersistentVolumeClaim {
+func (obj *PersistentVolumeClaim) SetSelector(labels map[string]string) *PersistentVolumeClaim {
 	if len(labels) < 1 {
-		pvc.err = errors.New("set LabelSelector error, labels is empty")
-		return pvc
+		obj.err = errors.New("set LabelSelector error, labels is empty")
+		return obj
 	}
-	if pvc.v1.Spec.Selector == nil {
+	if obj.pvc.Spec.Selector == nil {
 		selector := &metav1.LabelSelector{
 			MatchLabels: labels,
 		}
-		pvc.v1.Spec.Selector = selector
-		return pvc
+		obj.pvc.Spec.Selector = selector
+		return obj
 	}
-	pvc.v1.Spec.Selector.MatchLabels = labels
-	return pvc
+	obj.pvc.Spec.Selector.MatchLabels = labels
+	return obj
 }
 
 // SetMatchExpressions set pvc label selector,have key,operator and values
-func (pvc *PersistentVolumeClaim) SetMatchExpressions(ents []core.LabelSelectorRequirement) *PersistentVolumeClaim {
+func (obj *PersistentVolumeClaim) SetMatchExpressions(ents []core.LabelSelectorRequirement) *PersistentVolumeClaim {
 	requirements := make([]metav1.LabelSelectorRequirement, 0)
 	err := mapper.AutoMapper(ents, requirements)
 	if err != nil {
-		pvc.err = fmt.Errorf("SetMatchExpressions error:%v", err)
-		return pvc
+		obj.err = fmt.Errorf("SetMatchExpressions error:%v", err)
+		return obj
 	}
-	if pvc.v1.Spec.Selector == nil {
+	if obj.pvc.Spec.Selector == nil {
 		selector := &metav1.LabelSelector{
 			MatchExpressions: requirements,
 		}
-		pvc.v1.Spec.Selector = selector
-		return pvc
+		obj.pvc.Spec.Selector = selector
+		return obj
 	}
-	pvc.v1.Spec.Selector.MatchExpressions = requirements
-	return pvc
+	obj.pvc.Spec.Selector.MatchExpressions = requirements
+	return obj
 }
 
 // verify  pvc
-func (pvc *PersistentVolumeClaim) verify() {
-	if !verifyString(pvc.v1.GetName()) {
-		pvc.err = errors.New("pvc name not allow empty")
+func (obj *PersistentVolumeClaim) verify() {
+	if !verifyString(obj.pvc.GetName()) {
+		obj.err = errors.New("obj name not allow empty")
 		return
 	}
-	if pvc.v1.Spec.AccessModes == nil || len(pvc.v1.Spec.AccessModes) < 1 {
-		pvc.err = errors.New("pvc accessModes not allow empty")
+	if obj.pvc.Spec.AccessModes == nil || len(obj.pvc.Spec.AccessModes) < 1 {
+		obj.err = errors.New("obj accessModes not allow empty")
 		return
 	}
-	if pvc.v1.Spec.VolumeMode == nil {
-		pvc.err = errors.New("pvc volumeMode not allow nil")
+	if obj.pvc.Spec.VolumeMode == nil {
+		obj.err = errors.New("obj volumeMode not allow nil")
 		return
 	}
-	if pvc.v1.Spec.Resources.Limits == nil && pvc.v1.Spec.Resources.Requests == nil {
-		pvc.err = errors.New("both limits and requests is nil  not allow")
+	if obj.pvc.Spec.Resources.Limits == nil && obj.pvc.Spec.Resources.Requests == nil {
+		obj.err = errors.New("both limits and requests is nil  not allow")
 		return
 	}
-	pvc.v1.Kind = "PersistentVolumeClaim"
-	pvc.v1.APIVersion = "v1"
+	obj.pvc.Kind = "PersistentVolumeClaim"
+	obj.pvc.APIVersion = "v1"
 }
 
 // Finish  the final step,will return kubernetes resource object pv and error
-func (pvc *PersistentVolumeClaim) Finish() (*v1.PersistentVolumeClaim, error) {
-	pvc.verify()
-	if pvc.err != nil {
-		return nil, pvc.err
+func (obj *PersistentVolumeClaim) Finish() (*v1.PersistentVolumeClaim, error) {
+	obj.verify()
+	if obj.err != nil {
+		return nil, obj.err
 	}
-	return pvc.v1, nil
+	return obj.pvc, nil
 }
