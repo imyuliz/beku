@@ -16,14 +16,14 @@ type PersistentVolumeClaim struct {
 	err error
 }
 
-// Newobj create pvc
+// NewPVC create pvc
 func NewPVC() *PersistentVolumeClaim {
 	return &PersistentVolumeClaim{
 		pvc: &v1.PersistentVolumeClaim{},
 	}
 }
 
-// SetNametae set pvc name
+// SetName set pvc name
 func (obj *PersistentVolumeClaim) SetName(name string) *PersistentVolumeClaim {
 	obj.pvc.SetName(name)
 	return obj
@@ -47,13 +47,13 @@ func (obj *PersistentVolumeClaim) SetAnnotations(annotations map[string]string) 
 	return obj
 }
 
-// SetobjAccessMode set pvc accessMode
+// SetPVCAccessMode set pvc accessMode
 func (obj *PersistentVolumeClaim) SetPVCAccessMode(mode core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
 	obj.pvc.Spec.AccessModes = []v1.PersistentVolumeAccessMode{mode.ToK8s()}
 	return obj
 }
 
-// SetobjAccessModes set pvc accessModes
+// SetPVCAccessModes set pvc accessModes
 func (obj *PersistentVolumeClaim) SetPVCAccessModes(modes []core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
 	var objModes []v1.PersistentVolumeAccessMode
 	for _, m := range modes {

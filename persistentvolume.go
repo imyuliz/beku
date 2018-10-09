@@ -16,7 +16,7 @@ type PersistentVolume struct {
 	err error
 }
 
-// Newobj create pv
+// NewPV create pv
 func NewPV() *PersistentVolume {
 	return &PersistentVolume{
 		pv: &v1.PersistentVolume{},
