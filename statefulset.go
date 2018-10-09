@@ -115,6 +115,9 @@ func (obj *StatefulSet) SetContainer(name, image string, containerPort int32) *S
 }
 
 func (obj *StatefulSet) verify() {
+	if obj.err != nil {
+		return
+	}
 	if !verifyString(obj.sts.GetName()) {
 		obj.err = errors.New("sts name  not allow empty")
 		return

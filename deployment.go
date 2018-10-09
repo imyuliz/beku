@@ -197,6 +197,9 @@ func (dep *Deployment) SetEnvs(envMap map[string]string) *Deployment {
 }
 
 func (dep *Deployment) verify() {
+	if dep.err != nil {
+		return
+	}
 	if !verifyString(dep.deploy.GetName()) {
 		dep.err = errors.New("deployment name not allow empty")
 		return

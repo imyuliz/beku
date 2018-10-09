@@ -66,6 +66,9 @@ func (secret *Secret) SetType(secType core.SecretType) *Secret {
 }
 
 func (secret *Secret) verify() {
+	if secret.err != nil {
+		return
+	}
 	if !verifyString(secret.v1.Name) {
 		secret.err = errors.New("secret name not allow empty")
 		return

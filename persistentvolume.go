@@ -35,10 +35,20 @@ func (obj *PersistentVolume) SetLabels(labels map[string]string) *PersistentVolu
 	return obj
 }
 
+// GetLabels get pv labels
+func (obj *PersistentVolume) GetLabels() map[string]string {
+	return obj.pv.GetLabels()
+}
+
 // SetName set pv name
 func (obj *PersistentVolume) SetName(name string) *PersistentVolume {
 	obj.pv.SetName(name)
 	return obj
+}
+
+// GetName get pv name
+func (obj *PersistentVolume) GetName() string {
+	return obj.pv.GetName()
 }
 
 // // SetNamespace set pv namespace ,default namesapce is default
@@ -143,21 +153,24 @@ func (obj *PersistentVolume) SetRBD(rbd *core.RBDPersistentVolumeSource) *Persis
 
 // Verify Verify pv
 func (obj *PersistentVolume) verify() {
+	if obj.err != nil {
+		return
+	}
 	if !verifyString(obj.pv.GetName()) {
-		obj.err = errors.New("obj name not allow empty")
+		obj.err = errors.New("pv name not allow empty")
 		return
 	}
 	if obj.pv.Spec.AccessModes == nil || len(obj.pv.Spec.AccessModes) < 1 {
-		obj.err = errors.New("obj accessModes not allow empty")
+		obj.err = errors.New("pv accessModes not allow empty")
 		return
 	}
 	if obj.pv.Spec.Capacity == nil || len(obj.pv.Spec.Capacity) < 1 {
-		obj.err = errors.New("obj capacity not allow  empty")
+		obj.err = errors.New("pv capacity not allow empty")
 		return
 	}
 	var objs v1.PersistentVolumeSource
 	if obj.pv.Spec.PersistentVolumeSource == objs {
-		obj.err = errors.New("obj persistentVolumessource not allow empty")
+		obj.err = errors.New("pv persistentVolumessource not allow empty")
 		return
 	}
 	obj.pv.Kind = "PersistentVolume"

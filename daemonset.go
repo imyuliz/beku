@@ -136,6 +136,9 @@ func (ds *DaemonSet) GetPodLabel() map[string]string {
 }
 
 func (ds *DaemonSet) verify() {
+	if ds.err != nil {
+		return
+	}
 	if !verifyString(ds.v1.Name) {
 		ds.err = errors.New("daemonSet name not allow empty")
 		return

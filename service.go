@@ -117,6 +117,9 @@ func (svc *Service) SetSessionAffinity(affinity core.ServiceAffinity) *Service {
 
 // Verify 验证数据的可用性
 func (svc *Service) verify() {
+	if svc.err != nil {
+		return
+	}
 	if !verifyString(svc.v1.Kind) {
 		svc.v1.Kind = "Service"
 	}

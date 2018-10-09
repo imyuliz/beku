@@ -52,6 +52,9 @@ func (obj *ConfigMap) SetData(data map[string]string) *ConfigMap {
 
 // verify check configMap integrity
 func (obj *ConfigMap) verify() {
+	if obj.err != nil {
+		return
+	}
 	if !verifyString(obj.cm.Name) {
 		obj.err = errors.New("configmap name not allow empty")
 		return
