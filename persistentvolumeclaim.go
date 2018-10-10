@@ -173,10 +173,6 @@ func (obj *PersistentVolumeClaim) verify() {
 		obj.err = errors.New("pvc accessModes not allow empty")
 		return
 	}
-	if obj.pvc.Spec.VolumeMode == nil {
-		obj.err = errors.New("pvc volumeMode not allow nil")
-		return
-	}
 	if obj.pvc.Spec.Resources.Limits == nil && obj.pvc.Spec.Resources.Requests == nil {
 		obj.err = errors.New("both limits and requests is nil not allow")
 		return
