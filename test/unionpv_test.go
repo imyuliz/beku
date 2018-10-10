@@ -25,6 +25,3 @@ func Test_Unionpv(t *testing.T) {
 	}
 	t.Log(string(data))
 }
-
-需要的字段
-name,namespace,
