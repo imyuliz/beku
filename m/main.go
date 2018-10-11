@@ -8,7 +8,22 @@ import (
 )
 
 func main() {
-	pv, pvc, err := beku.NewUnionPV().SetName("yulibaozi-test").SetVolumeMode(core.PersistentVolumeBlock).SetAccessMode(core.ReadWriteMany).SetNamespace("yulibaozi").SetCapacity(map[core.ResourceName]string{core.ResourceStorage: "5Gi"}).SetNFS(&core.NFSVolumeSource{Server: "10.141.40.141", Path: "/data"}).Finish()
+	pv, pvc, err := beku.NewUnionPV().SetName("yulibaozi-test").SetAccessMode(core.ReadWriteMany).SetCapacity(map[core.ResourceName]string{core.ResourceStorage: "5G"}).SetRBD(&core.RBDPersistentVolumeSource{
+		CephMonitors: []string{
+			"10.151.21.11:6789",
+			"10.151.21.12:6789",
+			"10.151.21.13:6789",
+		},
+		FSType:    "xfs",
+		RBDPool:   "pool",
+		RBDImage:  "xxx",
+		RadosUser: "admin",
+		Keyring:   "/etc/ceph/keyring",
+		SecretRef: &core.SecretReference{
+			Name:      "rbd-secret",
+			Namespace: "xxx",
+		},
+	}).Finish()
 	if err != nil {
 		panic(err)
 	}
@@ -16,6 +31,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Println(string(data))
 	fmt.Println("===")
 	data, err = core.ToJSON(pvc)
