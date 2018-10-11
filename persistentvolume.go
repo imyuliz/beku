@@ -141,11 +141,20 @@ func (obj *PersistentVolume) SetRBD(rbd *core.RBDPersistentVolumeSource) *Persis
 		obj.err = errors.New("rbd FSType not allow empty,maybe you can input one of  'ext4', 'xfs', 'ntfs'")
 
 	}
-	rbds := new(v1.RBDPersistentVolumeSource)
-	err := mapper.Mapper(rbd, rbds)
-	if err != nil {
-		obj.err = fmt.Errorf("SetRBD error:%v", err)
-		return obj
+	rbds := &v1.RBDPersistentVolumeSource{
+		CephMonitors: rbd.CephMonitors,
+		RBDImage:     rbd.RBDImage,
+		FSType:       rbd.FSType,
+		RBDPool:      rbd.RBDPool,
+		RadosUser:    rbd.RadosUser,
+		Keyring:      rbd.Keyring,
+		ReadOnly:     rbd.ReadOnly,
+	}
+	if rbd.SecretRef != nil {
+		rbds.SecretRef = &v1.SecretReference{
+			Name:      rbd.SecretRef.Name,
+			Namespace: rbd.SecretRef.Namespace,
+		}
 	}
 	obj.pv.Spec.PersistentVolumeSource.RBD = rbds
 	return obj

@@ -98,13 +98,21 @@ func (un *UnionPV) verify() {
 	if un.err != nil {
 		return
 	}
+	pvname, pvcname := un.pv.GetName(), un.pvc.GetName()
+	if !verifyString(pvname) || !verifyString(pvcname) {
+		un.err = errors.New("pvc or pv name is empty not allow")
+		return
+	}
 	//check labels and selector
 	pvlabels, pvclabels, pvcselector := un.pv.GetLabels(), un.pvc.GetLabels(), un.pvc.GetSelector()
 	if !reflect.DeepEqual(pvcselector, pvlabels) {
 		un.err = errors.New("UnionPV, it is not allow to pvc selector and pv labels not equal")
 		return
 	}
-	pvname, pvcname := un.pv.GetName(), un.pvc.GetName()
+	if !verifyString(un.pvc.GetNamespace()) {
+		un.SetNamespace("default")
+	}
+
 	if pvlabels == nil {
 		pvlabels = map[string]string{"name": pvname}
 		un.pv.SetLabels(pvlabels)

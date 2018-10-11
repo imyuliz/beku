@@ -34,6 +34,11 @@ func (obj *PersistentVolumeClaim) GetName() string {
 	return obj.pvc.GetName()
 }
 
+// GetNamespace  get pvc namespace
+func (obj *PersistentVolumeClaim) GetNamespace() string {
+	return obj.pvc.GetNamespace()
+}
+
 // SetNameSpace set  pvc namespace,defa∏ult namespace is default
 func (obj *PersistentVolumeClaim) SetNameSpace(namespace string) *PersistentVolumeClaim {
 	obj.pvc.SetNamespace(namespace)
