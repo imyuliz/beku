@@ -14,7 +14,7 @@ type Secret struct {
 }
 
 // NewSecret create secret
-func (secret *Secret) NewSecret() *Secret {
+func NewSecret() *Secret {
 	return &Secret{
 		v1: &v1.Secret{},
 	}
