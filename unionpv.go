@@ -29,9 +29,8 @@ func NewUnionPV() *UnionPV {
 
 // SetName set pvc and pv name
 func (un *UnionPV) SetName(name string) *UnionPV {
-	pvname, pvcname := name+"-pv", name+"-pvc"
-	un.pv.SetName(pvname)
-	un.pvc.SetName(pvcname)
+	un.pv.SetName(name)
+	un.pvc.SetName(name)
 	return un
 }
 
@@ -73,8 +72,8 @@ func (un *UnionPV) SetLabels(labels map[string]string) *UnionPV {
 	pvlabels := make(map[string]string, 0)
 	pvclabels := make(map[string]string, 0)
 	for k, v := range labels {
-		pvclabels[k] = v + "-pvc"
-		pvlabels[k] = v + "-pv"
+		pvclabels[k] = v
+		pvlabels[k] = v
 	}
 	un.pv.SetLabels(pvlabels)
 	un.pvc.SetLabels(pvclabels)
