@@ -1,75 +1,99 @@
 package beku
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/yulibaozi/beku/core"
+	"github.com/ghodss/yaml"
 	"github.com/yulibaozi/mapper"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PersistentVolumeClaim include kubernetes resource object
+// PersistentVolumeClaim include kubernetes resource object PersistentVolumeClaim(pvc) and error.
 type PersistentVolumeClaim struct {
 	pvc *v1.PersistentVolumeClaim
 	err error
 }
 
-// NewPVC create pvc
-func NewPVC() *PersistentVolumeClaim {
-	return &PersistentVolumeClaim{
-		pvc: &v1.PersistentVolumeClaim{},
-	}
+// NewPVC create PersistentVolumeClaim(pvc) and chain function call begin with this funtion.
+func NewPVC() *PersistentVolumeClaim { return &PersistentVolumeClaim{pvc: &v1.PersistentVolumeClaim{}} }
+
+// Finish Chain function call end with this function
+// return Kubernetes resource object PersistentVolumeClaim(pvc) and error.
+// In the function, it will check necessary parameters?input the default field?
+func (obj *PersistentVolumeClaim) Finish() (*v1.PersistentVolumeClaim, error) {
+	obj.verify()
+	return obj.pvc, obj.err
 }
 
-// SetName set pvc name
+// JSONNew use json data create PersistentVolumeClaim(pvc)
+func (obj *PersistentVolumeClaim) JSONNew(jsonbyts []byte) *PersistentVolumeClaim {
+	obj.err = json.Unmarshal(jsonbyts, obj.pvc)
+	return obj
+}
+
+// YAMLNew use yaml data create PersistentVolumeClaim(pvc)
+func (obj *PersistentVolumeClaim) YAMLNew(yamlbyts []byte) *PersistentVolumeClaim {
+	obj.err = yaml.Unmarshal(yamlbyts, obj.pvc)
+	return obj
+}
+
+// SetName set PersistentVolumeClaim(pvc) name
 func (obj *PersistentVolumeClaim) SetName(name string) *PersistentVolumeClaim {
 	obj.pvc.SetName(name)
 	return obj
 }
 
-// GetName get pvc name
+// SetNamespaceAndName set Deployment namespace,set Pod namespace,set Deployment name.
+func (obj *PersistentVolumeClaim) SetNamespaceAndName(namespace, name string) *PersistentVolumeClaim {
+	obj.SetNamespace(namespace)
+	obj.SetName(name)
+	return obj
+}
+
+// GetName get PersistentVolumeClaim(pvc) name
 func (obj *PersistentVolumeClaim) GetName() string {
 	return obj.pvc.GetName()
 }
 
-// GetNamespace  get pvc namespace
+// GetNamespace get PersistentVolumeClaim(pvc) namespace
 func (obj *PersistentVolumeClaim) GetNamespace() string {
 	return obj.pvc.GetNamespace()
 }
 
-// SetNameSpace set  pvc namespace,defa∏ult namespace is default
-func (obj *PersistentVolumeClaim) SetNameSpace(namespace string) *PersistentVolumeClaim {
+// SetNamespace set PersistentVolumeClaim(pvc) namespace,default namespace is 'default'
+func (obj *PersistentVolumeClaim) SetNamespace(namespace string) *PersistentVolumeClaim {
 	obj.pvc.SetNamespace(namespace)
 	return obj
 }
 
-// SetLabels set pvc label
+// SetLabels set PersistentVolumeClaim(pvc) labels
 func (obj *PersistentVolumeClaim) SetLabels(labels map[string]string) *PersistentVolumeClaim {
 	obj.pvc.SetLabels(labels)
 	return obj
 }
 
-// GetLabels get pvc labels
+// GetLabels get PersistentVolumeClaim(pvc) labels
 func (obj *PersistentVolumeClaim) GetLabels() map[string]string {
 	return obj.pvc.GetLabels()
 }
 
-// SetAnnotations set annotation
+// SetAnnotations set PersistentVolumeClaim(pvc) annotations
 func (obj *PersistentVolumeClaim) SetAnnotations(annotations map[string]string) *PersistentVolumeClaim {
 	obj.pvc.SetAnnotations(annotations)
 	return obj
 }
 
-// SetAccessMode set pvc accessMode
-func (obj *PersistentVolumeClaim) SetAccessMode(mode core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
+// SetAccessMode set PersistentVolumeClaim(pvc) access mode, only one
+func (obj *PersistentVolumeClaim) SetAccessMode(mode PersistentVolumeAccessMode) *PersistentVolumeClaim {
 	obj.pvc.Spec.AccessModes = []v1.PersistentVolumeAccessMode{mode.ToK8s()}
 	return obj
 }
 
-// SetAccessModes set pvc accessModes
-func (obj *PersistentVolumeClaim) SetAccessModes(modes []core.PersistentVolumeAccessMode) *PersistentVolumeClaim {
+// SetAccessModes set PersistentVolumeClaim(pvc) accessModes, many modes
+func (obj *PersistentVolumeClaim) SetAccessModes(modes []PersistentVolumeAccessMode) *PersistentVolumeClaim {
 	var objModes []v1.PersistentVolumeAccessMode
 	for _, m := range modes {
 		objModes = append(objModes, m.ToK8s())
@@ -78,53 +102,52 @@ func (obj *PersistentVolumeClaim) SetAccessModes(modes []core.PersistentVolumeAc
 	return obj
 }
 
-// SetVolumeMode pvc vloume mode,have Block and Filesystem  mode
-func (obj *PersistentVolumeClaim) SetVolumeMode(volumeMode core.PersistentVolumeMode) *PersistentVolumeClaim {
+// SetVolumeMode PersistentVolumeClaim(pvc) vloume mode,have Block and Filesystem mode
+func (obj *PersistentVolumeClaim) SetVolumeMode(volumeMode PersistentVolumeMode) *PersistentVolumeClaim {
 	m := volumeMode.ToK8s()
 	if m == nil {
-		obj.err = fmt.Errorf("set volumeMode err: this volumeMode not allow %v", volumeMode)
+		obj.err = fmt.Errorf("SetVolumeMode err: the volumeMode: %v is not allowed", volumeMode)
 	}
 	obj.pvc.Spec.VolumeMode = m
 	return obj
 }
 
-// SetResourceLimit set pvc resource limit
-func (obj *PersistentVolumeClaim) SetResourceLimit(limits map[core.ResourceName]string) *PersistentVolumeClaim {
-	data, err := core.ResourceMapsToK8s(limits)
-
+// SetResourceLimits set PersistentVolumeClaim(pvc) resource limits
+func (obj *PersistentVolumeClaim) SetResourceLimits(limits map[ResourceName]string) *PersistentVolumeClaim {
+	data, err := ResourceMapsToK8s(limits)
 	if err != nil {
-		obj.err = fmt.Errorf("limit set err:%v", err)
+		obj.err = fmt.Errorf("SetResourceLimit err:%v", err)
 		return obj
 	}
 	obj.pvc.Spec.Resources.Limits = data
 	return obj
 }
 
-// SetResourceRequests set pvc reource requests
-func (obj *PersistentVolumeClaim) SetResourceRequests(requests map[core.ResourceName]string) *PersistentVolumeClaim {
-	data, err := core.ResourceMapsToK8s(requests)
+// SetResourceRequests set PersistentVolumeClaim(pvc) reource requests
+func (obj *PersistentVolumeClaim) SetResourceRequests(requests map[ResourceName]string) *PersistentVolumeClaim {
+	data, err := ResourceMapsToK8s(requests)
 	if err != nil {
-		obj.err = fmt.Errorf("request set err:%v", err)
+		obj.err = fmt.Errorf("SetResourceRequests err:%v", err)
 		return obj
 	}
 	obj.pvc.Spec.Resources.Requests = data
 	return obj
 }
 
-// SetStorageClassName set storageclasss name
+// SetStorageClassName set PersistentVolumeClaim(pvc) storageclasss name
 func (obj *PersistentVolumeClaim) SetStorageClassName(classname string) *PersistentVolumeClaim {
 	if classname == "" || len(classname) <= 0 {
-		obj.err = errors.New("set StorageClassName is empty,set failed")
+		obj.err = errors.New("SetStorageClassName err, StorageClassName is not allowed to be empty")
 		return obj
 	}
 	obj.pvc.Spec.StorageClassName = &classname
 	return obj
 }
 
-// SetSelector set pvc selector
+// SetSelector set PersistentVolumeClaim(pvc) selector
 func (obj *PersistentVolumeClaim) SetSelector(labels map[string]string) *PersistentVolumeClaim {
 	if len(labels) < 1 {
-		obj.err = errors.New("set LabelSelector error, labels is empty")
+		obj.err = errors.New("SetSelector error, labels is not allowed to be empty")
 		return obj
 	}
 	if obj.pvc.Spec.Selector == nil {
@@ -138,7 +161,7 @@ func (obj *PersistentVolumeClaim) SetSelector(labels map[string]string) *Persist
 	return obj
 }
 
-// GetSelector get pvc selector
+// GetSelector get PersistentVolumeClaim(pvc) selector
 func (obj *PersistentVolumeClaim) GetSelector() map[string]string {
 	if obj.pvc.Spec.Selector == nil {
 		return nil
@@ -146,26 +169,27 @@ func (obj *PersistentVolumeClaim) GetSelector() map[string]string {
 	return obj.pvc.Spec.Selector.MatchLabels
 }
 
-// SetMatchExpressions set pvc label selector,have key,operator and values
-func (obj *PersistentVolumeClaim) SetMatchExpressions(ents []core.LabelSelectorRequirement) *PersistentVolumeClaim {
+// SetMatchExpressions set Deployment match expressions
+// the field is used to set complicated Label.
+// ToDo: mapper error.
+func (obj *PersistentVolumeClaim) SetMatchExpressions(ents []LabelSelectorRequirement) *PersistentVolumeClaim {
 	requirements := make([]metav1.LabelSelectorRequirement, 0)
 	err := mapper.AutoMapper(ents, requirements)
 	if err != nil {
-		obj.err = fmt.Errorf("SetMatchExpressions error:%v", err)
+		obj.err = fmt.Errorf("SetMatchExpressions err:%v", err)
 		return obj
 	}
 	if obj.pvc.Spec.Selector == nil {
-		selector := &metav1.LabelSelector{
+		obj.pvc.Spec.Selector = &metav1.LabelSelector{
 			MatchExpressions: requirements,
 		}
-		obj.pvc.Spec.Selector = selector
 		return obj
 	}
 	obj.pvc.Spec.Selector.MatchExpressions = requirements
 	return obj
 }
 
-// verify  pvc
+// verify check service necessary value, input the default field and input related data.
 func (obj *PersistentVolumeClaim) verify() {
 	if obj.err != nil {
 		return
@@ -184,13 +208,4 @@ func (obj *PersistentVolumeClaim) verify() {
 	}
 	obj.pvc.Kind = "PersistentVolumeClaim"
 	obj.pvc.APIVersion = "v1"
-}
-
-// Finish  the final step,will return kubernetes resource object pv and error
-func (obj *PersistentVolumeClaim) Finish() (*v1.PersistentVolumeClaim, error) {
-	obj.verify()
-	if obj.err != nil {
-		return nil, obj.err
-	}
-	return obj.pvc, nil
 }

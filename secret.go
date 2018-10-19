@@ -1,87 +1,96 @@
 package beku
 
 import (
+	"encoding/json"
 	"errors"
 
-	"github.com/yulibaozi/beku/core"
+	"github.com/ghodss/yaml"
 	"k8s.io/api/core/v1"
 )
 
-// Secret 加密配置
+// Secret include Kuebernetes resource object Secret and error.
 type Secret struct {
-	v1  *v1.Secret
+	sc  *v1.Secret
 	err error
 }
 
-// NewSecret create secret
-func NewSecret() *Secret {
-	return &Secret{
-		v1: &v1.Secret{},
-	}
+// NewSecret create Secret and chain function call begin with this function.
+func NewSecret() *Secret { return &Secret{sc: &v1.Secret{}} }
+
+// Finish chain function call end with this function.
+// return obj(Kubernetes resource object) and error
+// In the function, it will check necessary parameters、input the default field。
+func (obj *Secret) Finish() (*v1.Secret, error) {
+	obj.verify()
+	return obj.sc, obj.err
 }
 
-// SetNamespace set secrete namespace ,default namespace is default
-func (secret *Secret) SetNamespace(namespace string) *Secret {
-	secret.v1.SetNamespace(namespace)
-	return secret
+// JSONNew use json data create Secret
+func (obj *Secret) JSONNew(jsonbyts []byte) *Secret {
+	obj.err = json.Unmarshal(jsonbyts, obj.sc)
+	return obj
 }
 
-// SetName set name
-func (secret *Secret) SetName(name string) *Secret {
-	secret.v1.SetName(name)
-	return secret
+// YAMLNew use yaml data create Secret
+func (obj *Secret) YAMLNew(yamlbyts []byte) *Secret {
+	obj.err = yaml.Unmarshal(yamlbyts, obj.sc)
+	return obj
 }
 
-// SetNameSpaceAndName set secret namespace and name
-func (secret *Secret) SetNameSpaceAndName(namespace, name string) *Secret {
-	secret.v1.SetNamespace(namespace)
-	secret.v1.SetName(name)
-	return secret
+// SetName set Secret name
+func (obj *Secret) SetName(name string) *Secret {
+	obj.sc.SetName(name)
+	return obj
 }
 
-// SetLabels set secret labels
-func (secret *Secret) SetLabels(labels map[string]string) *Secret {
-	secret.v1.SetLabels(labels)
-	return secret
+// SetNamespace set Secret namespace ,default namespace is 'default'
+func (obj *Secret) SetNamespace(namespace string) *Secret {
+	obj.sc.SetNamespace(namespace)
+	return obj
 }
 
-// SetDataString set secret data
-func (secret *Secret) SetDataString(datas map[string]string) *Secret {
-	secret.v1.StringData = datas
-	return secret
+// SetNamespaceAndName set Secret namespace and name
+func (obj *Secret) SetNamespaceAndName(namespace, name string) *Secret {
+	obj.sc.SetNamespace(namespace)
+	obj.sc.SetName(name)
+	return obj
 }
 
-// SetDataBytes set secret data for byte
-func (secret *Secret) SetDataBytes(bytes map[string][]byte) *Secret {
-	secret.v1.Data = bytes
-	return secret
+// SetLabels set Secret labels
+func (obj *Secret) SetLabels(labels map[string]string) *Secret {
+	obj.sc.SetLabels(labels)
+	return obj
 }
 
-// SetType set secret type,have Opaque and kubernetes.io/service-account-token two kind
+// SetDataString set Secret data, and Don't need to encode base64
+func (obj *Secret) SetDataString(datas map[string]string) *Secret {
+	obj.sc.StringData = datas
+	return obj
+}
+
+// SetDataBytes set Secret data for byte,and Don't need to encode base64
+func (obj *Secret) SetDataBytes(bytes map[string][]byte) *Secret {
+	obj.sc.Data = bytes
+	return obj
+}
+
+// SetType set Secret type,have Opaque and kubernetes.io/service-account-token
 // Opaque user-defined data
 // kubernetes.io/service-account-token is used to kubernetes apiserver,because apiserver need to auth
-func (secret *Secret) SetType(secType core.SecretType) *Secret {
-	secret.v1.Type = secType.ToK8s()
-	return secret
+func (obj *Secret) SetType(secType SecretType) *Secret {
+	obj.sc.Type = secType.ToK8s()
+	return obj
 }
 
-func (secret *Secret) verify() {
-	if secret.err != nil {
+// verify check Secret necessary value, input the default field and input related data.
+func (obj *Secret) verify() {
+	if obj.err != nil {
 		return
 	}
-	if !verifyString(secret.v1.Name) {
-		secret.err = errors.New("secret name not allow empty")
+	if !verifyString(obj.sc.Name) {
+		obj.err = errors.New("secret name not allow empty")
 		return
 	}
-	secret.v1.APIVersion = "v1"
-	secret.v1.Kind = "Secret"
-}
-
-// Finish the final step,will return kubernetes resource object secret and error
-func (secret *Secret) Finish() (*v1.Secret, error) {
-	secret.verify()
-	if secret.err != nil {
-		return nil, secret.err
-	}
-	return secret.v1, nil
+	obj.sc.APIVersion = "v1"
+	obj.sc.Kind = "Secret"
 }

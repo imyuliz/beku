@@ -3,101 +3,94 @@ package beku
 import (
 	"encoding/json"
 	"errors"
-	"math"
-	"strconv"
+	"fmt"
 
 	"github.com/ghodss/yaml"
-	"github.com/yulibaozi/beku/core"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// Service Kubernetes svc resource
+// Service include Kubernetes resource object Service and error
 type Service struct {
-	v1  *v1.Service
+	svc *v1.Service
 	err error
 }
 
-// NewSVC   create service
-func NewSVC() *Service {
-	return &Service{
-		v1: &v1.Service{},
-	}
-}
+// NewSvc create service(svc) and chain function call begin with this function.
+func NewSvc() *Service { return &Service{svc: &v1.Service{}} }
 
-// JSONNew json style create service
-func (svc *Service) JSONNew(jsonbyts []byte) *Service {
-	err := json.Unmarshal(jsonbyts, svc.v1)
-	if err != nil {
-		svc.err = err
-	}
-	return svc
-}
-
-// YAMLNew yaml style create service
-func (svc *Service) YAMLNew(yamlbyts []byte) *Service {
-	err := yaml.Unmarshal(yamlbyts, svc.v1)
-	if err != nil {
-		svc.err = err
-	}
-	return svc
-}
-
-// Finish check err  and return service
-func (svc *Service) Finish() (v1 *v1.Service, err error) {
-	svc.verify()
-	v1, err = svc.v1, svc.err
+// Finish Chain function call end with this function
+// return real service(really service is kubernetes resource object Service and error
+// In the function, it will check necessary parametersainput the default field
+func (obj *Service) Finish() (svc *v1.Service, err error) {
+	obj.verify()
+	svc, err = obj.svc, obj.err
 	return
 }
 
-// SetName setname
-func (svc *Service) SetName(name string) *Service {
-	svc.v1.SetName(name)
-	return svc
+// JSONNew use json data create service(svc)
+func (obj *Service) JSONNew(jsonbyts []byte) *Service {
+	obj.err = json.Unmarshal(jsonbyts, obj.svc)
+	return obj
 }
 
-// SetNameSpace set namespace
-func (svc *Service) SetNameSpace(namespace string) *Service {
-	svc.v1.SetNamespace(namespace)
-	return svc
+// YAMLNew use yaml data create service(svc)
+func (obj *Service) YAMLNew(yamlbyts []byte) *Service {
+	obj.err = yaml.Unmarshal(yamlbyts, obj.svc)
+	return obj
 }
 
-// SetNameAndNameSpace set name and namespace
-func (svc *Service) SetNameAndNameSpace(name, namespace string) *Service {
-	svc.v1.SetName(name)
-	svc.v1.SetNamespace(namespace)
-	return svc
+// SetName set service(svc) name
+func (obj *Service) SetName(name string) *Service {
+	obj.svc.SetName(name)
+	return obj
 }
 
-// SetLabels set labels
-func (svc *Service) SetLabels(labels map[string]string) *Service {
-	svc.v1.SetLabels(labels)
-	return svc
+// SetNamespace set service(svc) namespace
+func (obj *Service) SetNamespace(namespace string) *Service {
+	obj.svc.SetNamespace(namespace)
+	return obj
 }
 
-// SetSelector set seletor
-func (svc *Service) SetSelector(selector map[string]string) *Service {
-	svc.v1.Spec.Selector = selector
-	return svc
+// SetNamespaceAndName set service(svc) namespace and name
+// namespace default value is 'default'
+func (obj *Service) SetNamespaceAndName(namespace, name string) *Service {
+	obj.svc.SetName(name)
+	obj.svc.SetNamespace(namespace)
+	return obj
 }
 
-// SetServiceType set service type
-func (svc *Service) SetServiceType(st core.ServiceType) *Service {
-	svc.v1.Spec.Type = st.ToK8s()
-	return svc
+// SetLabels set service(svc) labels
+func (obj *Service) SetLabels(labels map[string]string) *Service {
+	obj.svc.SetLabels(labels)
+	return obj
 }
 
-// SetAnnotations set annotations
-func (svc *Service) SetAnnotations(annotations map[string]string) *Service {
-	svc.v1.SetAnnotations(annotations)
-	return svc
+// SetSelector set service(svc) seletor
+// The Pod that matches the selector will be selected
+// the function Required call when you create service(svc)
+func (obj *Service) SetSelector(selector map[string]string) *Service {
+	obj.svc.Spec.Selector = selector
+	return obj
 }
 
-// SetPorts set service ports
-func (svc *Service) SetPorts(ports []core.ServicePort) *Service {
-	svcPorts := make([]v1.ServicePort, 0)
+// SetServiceType set service(svc) type,you can choose NodePort,ClusterIP
+// many info please redirect to ServiceType
+func (obj *Service) SetServiceType(sty ServiceType) *Service {
+	obj.svc.Spec.Type = sty.ToK8s()
+	return obj
+}
+
+// SetAnnotations set service(svc) annotations
+func (obj *Service) SetAnnotations(annotations map[string]string) *Service {
+	obj.svc.SetAnnotations(annotations)
+	return obj
+}
+
+// SetPorts set service(svc) ports
+func (obj *Service) SetPorts(ports []ServicePort) *Service {
+	objPorts := make([]v1.ServicePort, 0)
 	for _, data := range ports {
-		svcPorts = append(svcPorts, v1.ServicePort{
+		objPorts = append(objPorts, v1.ServicePort{
 			Name:       data.Name,
 			Protocol:   data.Protocol.ToK8s(),
 			Port:       data.Port,
@@ -105,78 +98,66 @@ func (svc *Service) SetPorts(ports []core.ServicePort) *Service {
 			NodePort:   data.NodePort,
 		})
 	}
-	svc.v1.Spec.Ports = svcPorts
-	return svc
+	obj.svc.Spec.Ports = objPorts
+	return obj
 }
 
-// SetSessionAffinity set session affinity
-func (svc *Service) SetSessionAffinity(affinity core.ServiceAffinity) *Service {
-	svc.v1.Spec.SessionAffinity = affinity.ToK8s()
-	return svc
+// SetPort set service(svc) Port. port params required input on ServicePort
+// default TargetPort same as Port
+// NodePort is random number when not input or NodePort <= 0
+// Protocol default value 'TCP'
+func (obj *Service) SetPort(sp ServicePort) *Service {
+	sPort := v1.ServicePort{
+		Name:       sp.Name,
+		Protocol:   sp.Protocol.ToK8s(),
+		Port:       sp.Port,
+		TargetPort: FromInt(sp.TargetPort),
+		NodePort:   sp.NodePort,
+	}
+	if len(obj.svc.Spec.Ports) > 0 {
+		obj.svc.Spec.Ports = append(obj.svc.Spec.Ports, sPort)
+		return obj
+	}
+	obj.svc.Spec.Ports = []v1.ServicePort{sPort}
+	return obj
 }
 
-// Verify 验证数据的可用性
-func (svc *Service) verify() {
-	if svc.err != nil {
+// SetSessionAffinity set service(svc) session affinity
+func (obj *Service) SetSessionAffinity(affinity ServiceAffinity) *Service {
+	obj.svc.Spec.SessionAffinity = affinity.ToK8s()
+	return obj
+}
+
+// verify check service necessary value, input the default field and input related data.
+func (obj *Service) verify() {
+	if obj.err != nil {
 		return
 	}
-	if !verifyString(svc.v1.Kind) {
-		svc.v1.Kind = "Service"
-	}
-	if !verifyString(svc.v1.GetName()) {
-		svc.err = errors.New("service name is allow empty")
+	if !verifyString(obj.svc.GetName()) {
+		obj.err = errors.New("svc.Name is not allowed to be empty")
 		return
 	}
-	if !verifyString(svc.v1.APIVersion) {
-		svc.v1.APIVersion = "v1"
-	}
-	portLen := len(svc.v1.Spec.Ports)
-	if verifyMap(svc.v1.Spec.Selector) {
+	portLen := len(obj.svc.Spec.Ports)
+	if verifyMap(obj.svc.Spec.Selector) {
 		if portLen < 1 {
-			svc.err = errors.New("service ports not allow empty when spec.selector exists")
+			obj.err = errors.New("svc.Spec.Ports is not allowed be empty when svc.Spec.Selector exist")
 			return
 		}
 	}
 	if portLen > 1 {
 		nameMaps := make(map[string]bool, 0)
-		for _, data := range svc.v1.Spec.Ports {
+		for index, data := range obj.svc.Spec.Ports {
 			if !verifyString(data.Name) {
-				svc.err = errors.New("spec.port[x].name not allow empty when len(ports)>1")
+				obj.err = fmt.Errorf("svc.Spec.port[%d].name is not allowed be empty when len(svc.Spec.Ports) > 1", index)
 				return
 			}
 			nameMaps[data.Name] = true
 		}
 		if len(nameMaps) != portLen {
-			svc.err = errors.New("spec.ports name not allow repetition when len(ports)>1 ")
+			obj.err = errors.New("len(svc.Spec.Ports.Name) != len(svc.Spec.Ports) is not allowed when len(svc.Sepc.Ports) > 1")
 			return
 		}
 	}
-}
-
-func verifyString(str string) bool          { return !(str == "" || len(str) <= 0) }
-func verifyMap(maps map[string]string) bool { return len(maps) > 0 }
-
-// FromInt creates an IntOrString object with an int32 value. It is
-// your responsibility not to call this method with a value greater
-// than int32.
-// TODO: convert to (val int32)
-func FromInt(val int) intstr.IntOrString {
-	if val > math.MaxInt32 || val < math.MinInt32 {
-	}
-	return intstr.IntOrString{Type: intstr.Int, IntVal: int32(val)}
-}
-
-// FromString creates an IntOrString object with a string value.
-func FromString(val string) intstr.IntOrString {
-	return intstr.IntOrString{Type: intstr.String, StrVal: val}
-}
-
-// Parse the given string and try to convert it to an integer before
-// setting it as a string value.
-func Parse(val string) intstr.IntOrString {
-	i, err := strconv.Atoi(val)
-	if err != nil {
-		return FromString(val)
-	}
-	return FromInt(i)
+	obj.svc.Kind = "Service"
+	obj.svc.APIVersion = "v1"
 }

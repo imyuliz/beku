@@ -4,7 +4,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/yulibaozi/beku/core"
 	"k8s.io/api/core/v1"
 )
 
@@ -19,80 +18,89 @@ type UnionPV struct {
 	err error
 }
 
-// NewUnionPV create UnionPV
-func NewUnionPV() *UnionPV {
-	return &UnionPV{
-		pv:  NewPV(),
-		pvc: NewPVC(),
+// NewUnionPV create PersistentVolume,PersistentVolumeClaim and error
+// and chain funtion call begin with this function.
+func NewUnionPV() *UnionPV { return &UnionPV{pv: NewPV(), pvc: NewPVC()} }
+
+// Finish Chain function call end with this function
+// return Kubernetes resource object(PersistentVolume,PersistentVolumeClaim) and error
+// In the function, it will check necessary parametersainput the default field
+func (un *UnionPV) Finish() (pv *v1.PersistentVolume, pvc *v1.PersistentVolumeClaim, err error) {
+	un.verify()
+	if un.err != nil {
+		err = un.err
+		return
 	}
+	pv, err = un.pv.Finish()
+	if err != nil {
+		return
+	}
+	pvc, err = un.pvc.Finish()
+	return
 }
 
-// SetName set pvc and pv name
+// SetName set PersistentVolume and PersistentVolumeClaim name
 func (un *UnionPV) SetName(name string) *UnionPV {
 	un.pv.SetName(name)
 	un.pvc.SetName(name)
 	return un
 }
 
-// SetNamespace set pvc namespace,pv not have namespece
+// SetNamespace set PersistentVolumeClaim namespace,
+// and PersistentVolume can't set namespece because of no such attribute
 func (un *UnionPV) SetNamespace(namespace string) *UnionPV {
-	un.pvc.SetNameSpace(namespace)
+	un.pvc.SetNamespace(namespace)
 	return un
 }
 
-// SetAccessMode set pvc and pv accessmode
-func (un *UnionPV) SetAccessMode(mode core.PersistentVolumeAccessMode) *UnionPV {
+// SetAccessMode set PersistentVolume and PersistentVolumeClaim accessmode
+func (un *UnionPV) SetAccessMode(mode PersistentVolumeAccessMode) *UnionPV {
 	un.pvc.SetAccessMode(mode)
 	un.pv.SetAccessMode(mode)
 	return un
 }
 
-// SetAccessModes set pv and pv  access modes
-func (un *UnionPV) SetAccessModes(modes []core.PersistentVolumeAccessMode) *UnionPV {
+// SetAccessModes PersistentVolume and PersistentVolumeClaim access modes
+func (un *UnionPV) SetAccessModes(modes []PersistentVolumeAccessMode) *UnionPV {
 	un.pvc.SetAccessModes(modes)
 	un.pv.SetAccessModes(modes)
 	return un
 }
 
-// SetCapacity set pv capacity and set pvc resource request
-func (un *UnionPV) SetCapacity(capMaps map[core.ResourceName]string) *UnionPV {
+// SetCapacity set PersistentVolume capacity and set PersistentVolumeClaim resource request
+func (un *UnionPV) SetCapacity(capMaps map[ResourceName]string) *UnionPV {
 	un.pv.SetCapacity(capMaps)
 	un.pvc.SetResourceRequests(capMaps)
 	return un
 }
 
 // SetVolumeMode set pvc volume mode Filesystem or Block
-func (un *UnionPV) SetVolumeMode(volumeMode core.PersistentVolumeMode) *UnionPV {
+func (un *UnionPV) SetVolumeMode(volumeMode PersistentVolumeMode) *UnionPV {
 	un.pvc.SetVolumeMode(volumeMode)
 	return un
 }
 
-// SetLabels set pv labels ,set pvc labels and set pvc selector
+// SetLabels set PersistentVolume labels ,set PersistentVolumeClaim labels and set PersistentVolumeClaim selector
 func (un *UnionPV) SetLabels(labels map[string]string) *UnionPV {
-	pvlabels := make(map[string]string, 0)
-	pvclabels := make(map[string]string, 0)
-	for k, v := range labels {
-		pvclabels[k] = v
-		pvlabels[k] = v
-	}
-	un.pv.SetLabels(pvlabels)
-	un.pvc.SetLabels(pvclabels)
-	un.pvc.SetSelector(pvlabels)
+	un.pv.SetLabels(labels)
+	un.pvc.SetLabels(labels)
+	un.pvc.SetSelector(labels)
 	return un
 }
 
-// SetNFS set pv volume source is nfs
-func (un *UnionPV) SetNFS(nfs *core.NFSVolumeSource) *UnionPV {
+// SetNFS set PersistentVolume volume source is NFS
+func (un *UnionPV) SetNFS(nfs *NFSVolumeSource) *UnionPV {
 	un.pv.SetNFS(nfs)
 	return un
 }
 
-// SetRBD set pv volume source is rbd
-func (un *UnionPV) SetRBD(rbd *core.RBDPersistentVolumeSource) *UnionPV {
+// SetRBD set PersistentVolume volume source is RBD
+func (un *UnionPV) SetRBD(rbd *RBDPersistentVolumeSource) *UnionPV {
 	un.pv.SetRBD(rbd)
 	return un
 }
 
+// verify check UnionPV necessary value, input the default field and input related data.
 func (un *UnionPV) verify() {
 	if un.err != nil {
 		return
@@ -122,19 +130,4 @@ func (un *UnionPV) verify() {
 		un.pvc.SetLabels(pvclabels)
 	}
 
-}
-
-// Finish the finalstep, will return kubernetes resource object pvc,pv and error
-func (un *UnionPV) Finish() (pv *v1.PersistentVolume, pvc *v1.PersistentVolumeClaim, err error) {
-	un.verify()
-	if un.err != nil {
-		err = un.err
-		return
-	}
-	pv, err = un.pv.Finish()
-	if err != nil {
-		return
-	}
-	pvc, err = un.pvc.Finish()
-	return
 }

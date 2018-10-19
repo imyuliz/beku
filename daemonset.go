@@ -9,159 +9,153 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DaemonSet include k8s resource object DaemonSet and error
+// DaemonSet include Kubernets resource object DaemonSet and error
 type DaemonSet struct {
-	v1  *v1.DaemonSet
+	ds  *v1.DaemonSet
 	err error
 }
 
-// NewDS  new  DaemonSet
-func (ds *DaemonSet) NewDS() *DaemonSet {
-	return &DaemonSet{
-		v1: &v1.DaemonSet{},
+// NewDS create DaemonSet(ds) and chain function call begin with this function.
+func (obj *DaemonSet) NewDS() *DaemonSet { return &DaemonSet{ds: &v1.DaemonSet{}} }
+
+// Finish Chain function call end with this function
+// return real DaemonSet(really DaemonSet is kubernetes resource object DaemonSet and error
+// In the function, it will check necessary parameters、input the default field。
+func (obj *DaemonSet) Finish() (*v1.DaemonSet, error) {
+	if obj.err != nil {
+		return nil, obj.err
 	}
+	return obj.ds, nil
 }
 
-// SetName set daemonSet name
-func (ds *DaemonSet) SetName(name string) *DaemonSet {
-	ds.v1.SetName(name)
-	return ds
+// SetName set DaemonSet(ds) name
+func (obj *DaemonSet) SetName(name string) *DaemonSet {
+	obj.ds.SetName(name)
+	return obj
 }
 
-// SetNamespace set daemonSet namespace, default namespace is default
-func (ds *DaemonSet) SetNamespace(namespace string) *DaemonSet {
-	ds.v1.SetNamespace(namespace)
-	return ds
+// SetNamespace set DaemonSet(ds) namespace, default namespace value is 'default'
+func (obj *DaemonSet) SetNamespace(namespace string) *DaemonSet {
+	obj.ds.SetNamespace(namespace)
+	return obj
 }
 
-// SetNamespaceAndName set namespace and name
-func (ds *DaemonSet) SetNamespaceAndName(namespace, name string) *DaemonSet {
-	ds.v1.SetName(name)
-	ds.v1.SetNamespace(namespace)
-	return ds
+// SetNamespaceAndName set DaemonSet namespace and DaemonSet name and  Pod Namespace
+func (obj *DaemonSet) SetNamespaceAndName(namespace, name string) *DaemonSet {
+	obj.ds.SetName(name)
+	obj.ds.SetNamespace(namespace)
+	obj.ds.Spec.Template.SetNamespace(namespace)
+	return obj
 }
 
-// SetLabels set daemonSet labels
-func (ds *DaemonSet) SetLabels(labels map[string]string) *DaemonSet {
-	ds.v1.SetLabels(labels)
-	return ds
+// SetLabels set DaemonSet(ds) Labels,set Pod Labels and set DaemonSet selector.
+func (obj *DaemonSet) SetLabels(labels map[string]string) *DaemonSet {
+	obj.ds.SetLabels(labels)
+	obj.SetPodLabels(labels)
+	return obj
 }
 
-// SetSelector set Selector ,will check match label pod
-func (ds *DaemonSet) SetSelector(selector map[string]string) *DaemonSet {
-	if ds.v1.Spec.Selector == nil {
-		ds.v1.Spec.Selector = &metav1.LabelSelector{
+// SetSelector set DaemonSet(ds) Selector and Set Pod Label
+// The Pod that matches the seletor will be selected, DaemonSet will controller the Pod.
+func (obj *DaemonSet) SetSelector(selector map[string]string) *DaemonSet {
+	obj.ds.Spec.Template.SetLabels(selector)
+	if obj.ds.Spec.Selector == nil {
+		obj.ds.Spec.Selector = &metav1.LabelSelector{
 			MatchLabels: selector,
 		}
+		return obj
 	}
-	return ds
+	obj.ds.Spec.Selector.MatchLabels = selector
+	return obj
 }
 
-// SetPodLabels set  pod Label and will auto set DaemonSet SetSelector
-func (ds *DaemonSet) SetPodLabels(labels map[string]string) *DaemonSet {
-	ds.v1.Spec.Template.SetLabels(labels)
-	ds.SetSelector(labels)
-	return ds
+// SetPodLabels set Pod Label and set DaemonSet Selector
+func (obj *DaemonSet) SetPodLabels(labels map[string]string) *DaemonSet {
+	obj.ds.Spec.Template.SetLabels(labels)
+	obj.SetPodLabels(labels)
+	return obj
 }
 
-// SetContainer set daemonSet container
-// name Not required when only one Conatiner,you can input "",when many container this Field is necessary and cann't repeat
+// SetContainer set DaemonSet container
+// name Not required when only one Conatiner,you can input "".
+// when many container this Field is necessary and cann't repeat
 // image is necessary, image very important
 // containerPort container port,this is necessary
-func (ds *DaemonSet) SetContainer(name, image string, containerPort int32) *DaemonSet {
+func (obj *DaemonSet) SetContainer(name, image string, containerPort int32) *DaemonSet {
 	if containerPort <= 0 || containerPort >= 65536 {
-		ds.err = errors.New("containerPort error when SetContainer: 0 < containerPort < 65536")
-		return ds
+		obj.err = errors.New("SetContainer err, container Port range: 0 < containerPort < 65536")
+		return obj
 	}
 	if !verifyString(image) {
-		ds.err = errors.New("image not allow empty,must input image")
-		return ds
+		obj.err = errors.New("SetContainer err, image is not allowed to be empty")
+		return obj
 	}
-	port := corev1.ContainerPort{
-		ContainerPort: containerPort,
-	}
+	port := corev1.ContainerPort{ContainerPort: containerPort}
 	container := corev1.Container{
 		Name:  name,
 		Image: image,
 		Ports: []corev1.ContainerPort{port},
 	}
-	if ds.v1.Spec.Template.Spec.Containers == nil {
-		ds.v1.Spec.Template.Spec.Containers = []corev1.Container{container}
-		return ds
+	containersLen := len(obj.ds.Spec.Template.Spec.Containers)
+	if containersLen < 1 {
+		obj.ds.Spec.Template.Spec.Containers = []corev1.Container{container}
+		return obj
 	}
-	containersLen := len(ds.v1.Spec.Template.Spec.Containers)
 	for index := 0; index < containersLen; index++ {
-		img := strings.TrimSpace(ds.v1.Spec.Template.Spec.Containers[index].Image)
+		// if iamge not exist
+		img := strings.TrimSpace(obj.ds.Spec.Template.Spec.Containers[index].Image)
 		if img == "" || len(img) <= 0 {
-			ds.v1.Spec.Template.Spec.Containers[index] = container
-			return ds
+			obj.ds.Spec.Template.Spec.Containers[index].Name = name
+			obj.ds.Spec.Template.Spec.Containers[index].Image = image
+			obj.ds.Spec.Template.Spec.Containers[index].Ports = []corev1.ContainerPort{port}
+			return obj
 		}
 	}
-	ds.v1.Spec.Template.Spec.Containers = append(ds.v1.Spec.Template.Spec.Containers, container)
-	return ds
+	obj.ds.Spec.Template.Spec.Containers = append(obj.ds.Spec.Template.Spec.Containers, container)
+	return obj
 }
 
-// SetEnvs set pod Environmental variable
-func (ds *DaemonSet) SetEnvs(envMap map[string]string) *DaemonSet {
-
-	if len(envMap) <= 0 {
-		ds.err = errors.New("set env error: envMap is empty")
-		return ds
+// SetEnvs set Pod Environmental variable
+func (obj *DaemonSet) SetEnvs(envMap map[string]string) *DaemonSet {
+	envs, err := mapToEnvs(envMap)
+	if err != nil {
+		obj.err = err
+		return obj
 	}
-	var envs []corev1.EnvVar
-	for k, v := range envMap {
-		k, v = strings.TrimSpace(k), strings.TrimSpace(v)
-		if k == "" || v == "" {
-			ds.err = errors.New("set env error: name or value not allow")
-			return ds
-		}
-		envs = append(envs, corev1.EnvVar{Name: k, Value: v})
+	containerLen := len(obj.ds.Spec.Template.Spec.Containers)
+	if containerLen < 1 {
+		obj.ds.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Env: envs}}
+		return obj
 	}
-	if len(envs) <= 0 {
-		ds.err = errors.New("set env error, envs is empty")
-		return ds
-	}
-	containerLen := len(ds.v1.Spec.Template.Spec.Containers)
 	for index := 0; index < containerLen; index++ {
-		if ds.v1.Spec.Template.Spec.Containers[index].Env == nil {
-			ds.v1.Spec.Template.Spec.Containers[index].Env = envs
+		if obj.ds.Spec.Template.Spec.Containers[index].Env == nil {
+			obj.ds.Spec.Template.Spec.Containers[index].Env = envs
 		}
 	}
-	return ds
+	return obj
 }
 
 // GetPodLabel get pod labels
-func (ds *DaemonSet) GetPodLabel() map[string]string {
-	return ds.v1.Spec.Template.GetLabels()
+func (obj *DaemonSet) GetPodLabel() map[string]string {
+	return obj.ds.Spec.Template.GetLabels()
 }
 
-func (ds *DaemonSet) verify() {
-	if ds.err != nil {
+// verify check service necessary value, input the default field and input related data.
+func (obj *DaemonSet) verify() {
+	if obj.err != nil {
 		return
 	}
-	if !verifyString(ds.v1.Name) {
-		ds.err = errors.New("daemonSet name not allow empty")
+	if !verifyString(obj.ds.Name) {
+		obj.err = errors.New("DaemonSet.Name is not allowed to be empty")
 		return
 	}
-	if len(ds.v1.GetLabels()) < 1 {
-		ds.err = errors.New("daemonSet labels not allow empty")
+	if obj.ds.Spec.Template.Spec.Containers == nil || len(obj.ds.Spec.Template.Spec.Containers) < 1 {
+		obj.err = errors.New("DaemonSet.Spec.Template.Spec.Containers is not allowed to be empty")
 		return
 	}
-	if ds.v1.Spec.Template.Spec.Containers == nil || len(ds.v1.Spec.Template.Spec.Containers) < 1 {
-		ds.err = errors.New("DaemonSet.Spec.Template.Spec.Containers not allow nil")
-		return
+	if len(obj.GetPodLabel()) < 1 {
+		obj.err = errors.New("Pod Labels is not allowed to be empty,you can call SetPodLabels input")
 	}
-	if ds.v1.Spec.Selector == nil {
-		ds.SetSelector(ds.GetPodLabel())
-	}
-	ds.v1.Kind = "DaemonSet"
-	ds.v1.APIVersion = "app/v1"
-}
-
-// Finish the final step, will return kubernetes resource object  DaemonSet and error
-func (ds *DaemonSet) Finish() (*v1.DaemonSet, error) {
-	if ds.err != nil {
-		return nil, ds.err
-	}
-	return ds.v1, nil
+	obj.ds.Kind = "DaemonSet"
+	obj.ds.APIVersion = "app/v1"
 }

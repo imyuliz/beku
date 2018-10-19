@@ -1,4 +1,4 @@
-package core
+package beku
 
 import (
 	"strings"
@@ -20,17 +20,25 @@ type ServiceType string
 
 // ServiceType
 const (
+	// ServiceTypeClusterIP means a service will only be accessible inside the
+	// cluster, via the cluster IP.
 	ServiceTypeClusterIP ServiceType = "ClusterIP"
-
+	// ServiceTypeNodePort means a service will be exposed on one port of
+	// every node, in addition to 'ClusterIP' type.
 	ServiceTypeNodePort ServiceType = "NodePort"
-
+	// ServiceTypeLoadBalancer means a service will be exposed via an
+	// external load balancer (if the cloud provider supports it), in addition
+	// to 'NodePort' type.
 	ServiceTypeLoadBalancer ServiceType = "LoadBalancer"
-
+	// ServiceTypeExternalName means a service consists of only a reference to
+	// an external name that kubedns or equivalent will return as a CNAME
+	// record, with no exposing or proxying of any pods involved.
 	ServiceTypeExternalName ServiceType = "ExternalName"
 )
 
-func (st ServiceType) ToK8s() v1.ServiceType {
-	switch t := string(st); t {
+// ToK8s  translate into Kubernetes ServiceType
+func (sty ServiceType) ToK8s() v1.ServiceType {
+	switch t := string(sty); t {
 	case "ClusterIP":
 		return v1.ServiceTypeClusterIP
 	case "NodePort":
@@ -54,6 +62,7 @@ const (
 	ProtocolUDP Protocol = "UDP"
 )
 
+// ToK8s translate into Kubernetes Protocol
 func (pro Protocol) ToK8s() v1.Protocol {
 	switch p := string(pro); strings.ToUpper(p) {
 	case "TCP":
@@ -74,7 +83,7 @@ const (
 	PersistentVolumeFilesystem PersistentVolumeMode = "Filesystem"
 )
 
-// ToK8s   PersistentVolumeMode translation into   k8s PersistentVolumeMode
+// ToK8s   PersistentVolumeMode translate into   k8s PersistentVolumeMode
 func (vMode PersistentVolumeMode) ToK8s() *v1.PersistentVolumeMode {
 	switch v := string(vMode); v {
 	case "Block":
@@ -209,7 +218,7 @@ const (
 	ResourceNvidiaGPU ResourceName = "alpha.kubernetes.io/nvidia-gpu"
 )
 
-// ToK8s translation into k8s ResourceName
+// ToK8s translate into k8s ResourceName
 func (r ResourceName) ToK8s() v1.ResourceName {
 	switch re := string(r); re {
 	case "cpu":
@@ -242,7 +251,7 @@ const (
 	RWX           PersistentVolumeAccessMode = "RWX"
 )
 
-// ToK8s translation into k8s accessMode
+// ToK8s translate into k8s accessMode
 func (pvm PersistentVolumeAccessMode) ToK8s() v1.PersistentVolumeAccessMode {
 	switch m := string(pvm); m {
 	case "ReadWriteOnce", "RWO":
@@ -311,7 +320,7 @@ const (
 	ServiceAffinityNone ServiceAffinity = "None"
 )
 
-// ToK8s translation into k8s aserviceAffinity
+// ToK8s translate into k8s aserviceAffinity
 func (sa ServiceAffinity) ToK8s() v1.ServiceAffinity {
 	switch p := string(sa); strings.ToUpper(p) {
 	case "CLIENTIP":
@@ -322,6 +331,7 @@ func (sa ServiceAffinity) ToK8s() v1.ServiceAffinity {
 	return v1.ServiceAffinityNone
 }
 
+// SecretType 'Opaque' or 'kubernetes.io/service-account-token'
 type SecretType string
 
 const (
@@ -337,6 +347,7 @@ const (
 	SecretTypeServiceAccountToken SecretType = "kubernetes.io/service-account-token"
 )
 
+// ToK8s translate into Kubernets SecretType
 func (ty SecretType) ToK8s() v1.SecretType {
 	switch p := string(ty); p {
 	case "kubernetes.io/service-account-token":

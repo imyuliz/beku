@@ -5,54 +5,54 @@ import (
 	"testing"
 
 	"github.com/yulibaozi/beku"
-	"github.com/yulibaozi/beku/core"
 )
 
 // Test_Unionpv create unionpv, include pv and pvc
 func Test_Unionpv(t *testing.T) {
-	pv, pvc, err := beku.NewUnionPV().SetName("yulibaozi-test").SetVolumeMode(core.PersistentVolumeBlock).
-		SetAccessMode(core.ReadWriteMany).SetNamespace("yulibaozi").SetCapacity(map[core.ResourceName]string{core.ResourceStorage: "5Gi"}).
-		SetNFS(&core.NFSVolumeSource{Server: "10.141.40.141", Path: "/data"}).Finish()
+	pv, pvc, err := beku.NewUnionPV().SetName("yulibaozi-test").SetVolumeMode(beku.PersistentVolumeBlock).
+		SetAccessMode(beku.ReadWriteMany).SetNamespace("yulibaozi").SetCapacity(map[beku.ResourceName]string{beku.ResourceStorage: "5Gi"}).
+		SetNFS(&beku.NFSVolumeSource{Server: "10.141.40.141", Path: "/data"}).Finish()
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := core.ToJSON(pv)
+	data, err := beku.ToJSON(pv)
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err = core.ToJSON(pvc)
+	data, err = beku.ToJSON(pvc)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(string(data))
 
-	pv, pvc, err = beku.NewUnionPV().SetName("yulibaozi-test").SetAccessMode(core.ReadWriteMany).SetCapacity(map[core.ResourceName]string{core.ResourceStorage: "5G"}).SetRBD(&core.RBDPersistentVolumeSource{
-		CephMonitors: []string{
-			"10.151.21.11:6789",
-			"10.151.21.12:6789",
-			"10.151.21.13:6789",
-		},
-		FSType:    "xfs",
-		RBDPool:   "pool",
-		RBDImage:  "xxx",
-		RadosUser: "admin",
-		Keyring:   "/etc/ceph/keyring",
-		SecretRef: &core.SecretReference{
-			Name:      "rbd-secret",
-			Namespace: "xxx",
-		},
-	}).Finish()
+	pv, pvc, err = beku.NewUnionPV().SetName("yulibaozi-test").SetAccessMode(beku.ReadWriteMany).SetCapacity(map[beku.ResourceName]string{beku.ResourceStorage: "5G"}).
+		SetRBD(&beku.RBDPersistentVolumeSource{
+			CephMonitors: []string{
+				"10.151.21.11:6789",
+				"10.151.21.12:6789",
+				"10.151.21.13:6789",
+			},
+			FSType:    "xfs",
+			RBDPool:   "pool",
+			RBDImage:  "xxx",
+			RadosUser: "admin",
+			Keyring:   "/etc/ceph/keyring",
+			SecretRef: &beku.SecretReference{
+				Name:      "rbd-secret",
+				Namespace: "xxx",
+			},
+		}).Finish()
 	if err != nil {
 		panic(err)
 	}
-	data1, err := core.ToJSON(pv)
+	data1, err := beku.ToJSON(pv)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println(string(data1))
 	fmt.Println("===")
-	data2, err := core.ToJSON(pvc)
+	data2, err := beku.ToJSON(pvc)
 	if err != nil {
 		panic(err)
 	}
@@ -61,14 +61,14 @@ func Test_Unionpv(t *testing.T) {
 	// beku
 
 	// fmt.Println("hello world")
-	// pvc, err := beku.NewPVC().SetName("test-yulibaozi").SetLabels(map[string]string{"name": "test-yulibaozi"}).SetAccessMode(core.ReadWriteOnce).
-	// 	SetVolumeMode(core.PersistentVolumeFilesystem).SetResourceLimit(map[core.ResourceName]string{core.ResourceMemory: "1Gi"}).
+	// pvc, err := beku.NewPVC().SetName("test-yulibaozi").SetLabels(map[string]string{"name": "test-yulibaozi"}).SetAccessMode(ReadWriteOnce).
+	// 	SetVolumeMode(PersistentVolumeFilesystem).SetResourceLimit(map[ResourceName]string{ResourceMemory: "1Gi"}).
 	// 	Finish()
 	// if err != nil {
 
 	// 	panic(err)
 	// }
-	// data, err := core.ToYAML(pvc)
+	// data, err := ToYAML(pvc)
 	// if err != nil {
 	// 	panic(err)
 	// }
@@ -77,12 +77,12 @@ func Test_Unionpv(t *testing.T) {
 
 	// fmt.Println("=========pv=========")
 
-	// pv, err := beku.NewPV().SetName("test-pv").SetLabels(map[string]string{"name": "test-pv"}).SetNFS(&core.NFSVolumeSource{Server: "10.141.40.141", Path: "/data"}).SetAccessMode(core.RWX).SetCapacity(map[core.ResourceName]string{core.ResourceMemory: "1Gi"}).Finish()
+	// pv, err := beku.NewPV().SetName("test-pv").SetLabels(map[string]string{"name": "test-pv"}).SetNFS(&NFSVolumeSource{Server: "10.141.40.141", Path: "/data"}).SetAccessMode(RWX).SetCapacity(map[ResourceName]string{ResourceMemory: "1Gi"}).Finish()
 	// if err != nil {
 	// 	panic(err)
 	// }
-	// // &core.RBDPersistentVolumeSource{}
-	// data, err = core.ToYAML(pv)
+	// // &RBDPersistentVolumeSource{}
+	// data, err = ToYAML(pv)
 	// if err != nil {
 	// 	panic(err)
 	// }
