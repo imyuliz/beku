@@ -11,7 +11,7 @@ import (
 func Test_Unionpv(t *testing.T) {
 	pv, pvc, err := beku.NewUnionPV().SetName("yulibaozi-test").SetVolumeMode(beku.PersistentVolumeBlock).
 		SetAccessMode(beku.ReadWriteMany).SetNamespace("yulibaozi").SetCapacity(map[beku.ResourceName]string{beku.ResourceStorage: "5Gi"}).
-		SetNFS(&beku.NFSVolumeSource{Server: "10.141.40.141", Path: "/data"}).Finish()
+		SetNFS(&beku.NFSVolumeSource{Server: "xx.xx.xx.xxx", Path: "/data"}).Finish()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,22 +26,7 @@ func Test_Unionpv(t *testing.T) {
 	t.Log(string(data))
 
 	pv, pvc, err = beku.NewUnionPV().SetName("yulibaozi-test").SetAccessMode(beku.ReadWriteMany).SetCapacity(map[beku.ResourceName]string{beku.ResourceStorage: "5G"}).
-		SetRBD(&beku.RBDPersistentVolumeSource{
-			CephMonitors: []string{
-				"10.151.21.11:6789",
-				"10.151.21.12:6789",
-				"10.151.21.13:6789",
-			},
-			FSType:    "xfs",
-			RBDPool:   "pool",
-			RBDImage:  "xxx",
-			RadosUser: "admin",
-			Keyring:   "/etc/ceph/keyring",
-			SecretRef: &beku.SecretReference{
-				Name:      "rbd-secret",
-				Namespace: "xxx",
-			},
-		}).Finish()
+		SetRBD(&beku.RBDPersistentVolumeSource{}).Finish()
 	if err != nil {
 		panic(err)
 	}
