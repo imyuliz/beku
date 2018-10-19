@@ -7,10 +7,6 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-/*
-	pvc and pv union release,will create kuberentes resource object  pvc and pv.
-*/
-
 // UnionPV output pvc and pv
 type UnionPV struct {
 	pv  *PersistentVolume

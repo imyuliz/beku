@@ -4,7 +4,8 @@ How to use beku?
 ### How to quickly Create Service(svc)?
 
 If you want to quicky create service, only input necessary Fields.
-As shown in the codeï¼š
+
+As shown in the code:
 ```
 func howToNewSvc() {
 	svc, err := beku.NewSvc().SetNamespaceAndName("roc", "mysql-svc").
