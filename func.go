@@ -68,6 +68,59 @@ func ResourceMapsToK8s(maps map[ResourceName]string) (v1.ResourceList, error) {
 	return data, nil
 }
 
+// httpProbe  container health check  readness and liveness  http probe
+func httpProbe(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *v1.Probe {
+	if initDelaySec <= 0 {
+		initDelaySec = 30
+	}
+	return &v1.Probe{
+		Handler:             v1.Handler{HTTPGet: &v1.HTTPGetAction{Path: path, Port: FromInt(port), HTTPHeaders: mapsToHeaders(headers)}},
+		InitialDelaySeconds: initDelaySec,
+		TimeoutSeconds:      timeoutSec,
+		PeriodSeconds:       periodSec,
+	}
+}
+
+func mapsToHeaders(headers []map[string]string) []v1.HTTPHeader {
+	if len(headers) <= 0 {
+		return nil
+	}
+	return mapToHeaders(headers[0])
+}
+
+func mapToHeaders(header map[string]string) []v1.HTTPHeader {
+	var headers []v1.HTTPHeader
+	for key := range header {
+		headers = append(headers, v1.HTTPHeader{Name: key, Value: header[key]})
+	}
+	return headers
+}
+
+// cmdProbe container health check readness and liveness cmd probe
+func cmdProbe(cmd []string, initDelaySec, timeoutSec, periodSec int32) *v1.Probe {
+	if initDelaySec <= 0 {
+		initDelaySec = 30
+	}
+	return &v1.Probe{
+		Handler:             v1.Handler{Exec: &v1.ExecAction{Command: cmd}},
+		InitialDelaySeconds: initDelaySec,
+		TimeoutSeconds:      timeoutSec,
+		PeriodSeconds:       periodSec,
+	}
+}
+
+// tcpProbe container health check readness and liveness tcp probe
+func tcpProbe(host string, port int, initDelaySec, timeoutSec, periodSec int32) *v1.Probe {
+	if initDelaySec <= 0 {
+		initDelaySec = 30
+	}
+	return &v1.Probe{
+		Handler:             v1.Handler{TCPSocket: &v1.TCPSocketAction{Port: FromInt(port), Host: host}},
+		InitialDelaySeconds: initDelaySec,
+		TimeoutSeconds:      timeoutSec,
+		PeriodSeconds:       periodSec,
+	}
+}
 func verifyString(str string) bool          { return !(str == "" || len(str) <= 0) }
 func verifyMap(maps map[string]string) bool { return len(maps) > 0 }
 

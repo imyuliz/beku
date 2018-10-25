@@ -123,6 +123,87 @@ func (obj *Deployment) SetHistoryLimit(limit int32) *Deployment {
 	return obj
 }
 
+// SetHTTPLiveness set container liveness of http style
+// port: required
+// path: http request URL,eg: /api/v1/posts/1
+// initDelaySec: how long time after the first start of the program the probe is executed for the first time.(sec)
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *Deployment) SetHTTPLiveness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *Deployment {
+	return obj.setLiveness(httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+}
+
+// SetCMDLiveness set container liveness of cmd style
+// cmd: execute liveness probe as commond line
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *Deployment) SetCMDLiveness(cmd []string, initDelaySec, timeoutSec, periodSec int32) *Deployment {
+	return obj.setLiveness(cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+}
+
+// SetTCPLiveness set container liveness of tcp style
+// host: default is ""
+// port: required
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *Deployment) SetTCPLiveness(host string, port int, initDelaySec, timeoutSec, periodSec int32) *Deployment {
+	return obj.setLiveness(tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
+}
+
+func (obj *Deployment) setLiveness(probe *corev1.Probe) *Deployment {
+	if len(obj.dp.Spec.Template.Spec.Containers) <= 0 {
+		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{LivenessProbe: probe}}
+		return obj
+	}
+	obj.dp.Spec.Template.Spec.Containers[0].LivenessProbe = probe
+	return obj
+}
+
+func (obj *Deployment) setReadness(probe *corev1.Probe) *Deployment {
+	if len(obj.dp.Spec.Template.Spec.Containers) <= 0 {
+		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{ReadinessProbe: probe}}
+		return obj
+	}
+	obj.dp.Spec.Template.Spec.Containers[0].ReadinessProbe = probe
+	return obj
+}
+
+// SetHTTPReadness set container readness
+// initDelaySec: how long time after the first start of the program the probe is executed for the first time.(sec)
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *Deployment) SetHTTPReadness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *Deployment {
+	return obj.setReadness(httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+}
+
+// SetCMDReadness set container readness of cmd style
+// cmd: execute readness probe as commond line
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe? defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *Deployment) SetCMDReadness(cmd []string, initDelaySec, timeoutSec, periodSec int32) *Deployment {
+	return obj.setReadness(cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+}
+
+// SetTCPReadness set container readness of tcp style
+// host: default is ""
+// port: required
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe? defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *Deployment) SetTCPReadness(host string, port int, initDelaySec, timeoutSec, periodSec int32) *Deployment {
+	return obj.setReadness(tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
+}
+
 // SetMatchExpressions set Deployment match expressions
 // the field is used to set complicated Label.
 // ToDo: mapper error.
