@@ -1,6 +1,7 @@
 package beku
 
 import (
+	"errors"
 	"strings"
 
 	"k8s.io/api/core/v1"
@@ -13,6 +14,41 @@ type ServicePort struct {
 	Port       int32    `json:"port" protobuf:"varint,3,opt,name=port"`
 	TargetPort int      `json:"targetPort,omitempty" protobuf:"bytes,4,opt,name=targetPort"`
 	NodePort   int32    `json:"nodePort,omitempty" protobuf:"varint,5,opt,name=nodePort"`
+}
+
+var (
+	resourceLimit   = make(map[ResourceName]string, 0)
+	resourceRequest = make(map[ResourceName]string, 0)
+)
+
+func defaultLimit() map[ResourceName]string {
+	return resourceLimit
+}
+
+func defaultRequest() map[ResourceName]string {
+	return resourceRequest
+
+}
+
+// RegisterResourceLimit register you need default resource limit, resource only include CPU and MEMORY
+func RegisterResourceLimit(limits map[ResourceName]string) error {
+	if len(limits) == 2 && verifyString(limits[ResourceCPU]) && verifyString(limits[ResourceMemory]) {
+		resourceLimit[ResourceCPU] = limits[ResourceCPU]
+		resourceLimit[ResourceMemory] = limits[ResourceMemory]
+		return nil
+	}
+	return errors.New("resource limit must include cpu and memory and only include cpu and memory")
+
+}
+
+// RegisterResourceRequest register you need default resource limit, resource only include CPU and MEMORY
+func RegisterResourceRequest(request map[ResourceName]string) error {
+	if len(request) == 2 && verifyString(request[ResourceCPU]) && verifyString(request[ResourceMemory]) {
+		resourceRequest[ResourceCPU] = request[ResourceCPU]
+		resourceRequest[ResourceMemory] = request[ResourceMemory]
+		return nil
+	}
+	return errors.New("resource request must include cpu and memory and only include cpu and memory")
 }
 
 // ServiceType service type
@@ -380,3 +416,37 @@ func (pp PullPolicy) ToK8s() v1.PullPolicy {
 		return v1.PullIfNotPresent
 	}
 }
+
+// PodQOSClass defines the supported qos classes of Pods.
+type PodQOSClass string
+
+const (
+	// PodQOSGuaranteed is the Guaranteed qos class.
+	PodQOSGuaranteed PodQOSClass = "Guaranteed"
+	// PodQOSBurstable is the Burstable qos class.
+	PodQOSBurstable PodQOSClass = "Burstable"
+	// PodQOSBestEffort is the BestEffort qos class.
+	PodQOSBestEffort PodQOSClass = "BestEffort"
+)
+
+// ToK8s set pod qos
+func (qos PodQOSClass) ToK8s() v1.PodQOSClass {
+	switch p := string(qos); p {
+	case "Guaranteed":
+		return v1.PodQOSGuaranteed
+	case "Burstable":
+		return v1.PodQOSBurstable
+	case "BestEffort":
+		return v1.PodQOSBestEffort
+	}
+	return ""
+}
+
+// qosNotices set Qos information
+var (
+	qosNotices = map[string]string{
+		"Guaranteed": "Every Container in the Pod must have a memory limit and a memory request, and they must be the same, Every Container in the Pod must have a CPU limit and a CPU request, and they must be the same,more information: https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod",
+		"Burstable":  "The Pod does not meet the criteria for QoS class Guaranteed and at least one Container in the Pod has a memory or CPU request, more information: https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod",
+		"BestEffort": "The Containers in the Pod must not have any memory or CPU limits or requests, more information: https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod",
+	}
+)

@@ -49,4 +49,14 @@ configMap | cm | core/v1
 
 ### 关于beku的使用习惯
 
-beku的使用习惯是以NewXXX()开始链式调用,最终以调用Finish()表示调用结束,而得到完整的kubernetes资源对象配置信息。
+1. beku的使用习惯是以NewXXX()开始链式调用,最终以调用Finish()表示调用结束,而得到完整的kubernetes资源对象配置信息。
+2. 所有的填写都以SetXXX()开头,所有的获取都以GetXXX()开头
+3. beku定义的资源类型下方有支持的默认的资源类型,尽量不使用强转的方式来满足函数所需要的变量类型,会引发未知错误.
+4. 如果有函数的参数不知道填什么,这个参数的默认几种类型往往在注释中写着的。
+5. 在beku的应用场景中,Pod中的第一个container往往有至高地位,拥有优先设置的权利,而第二，第三个容器越来越显得平凡,比如:第一次设置环境的时候,只会为第一个container设置,而不会为第二个设置,当你第二次调用设置环境变量时，才会设置第二container的环境变量，以此类推
+5. 如果某结构体存储**union**,那么说明会同时创建两个Kubernetes资源对象,例如:Deployment和Service的联合,PersistentVolume和PersistentVolumeClaim的联合
+
+### 新特性
+
+* 支持设置QOS等级
+* 支持自动填充Pod的label

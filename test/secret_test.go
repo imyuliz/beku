@@ -7,7 +7,7 @@ import (
 )
 
 func Test_CreateSecret(t *testing.T) {
-	data, err := beku.NewSecret().SetNamespaceAndName("yulibaozi", "rbd-secret").SetType(beku.SecretTypeOpaque).SetDataString(map[string]string{"key": beku.Base64Encode([]byte("AQAqfzNaofxHLBAAS7qY64uE/ddqWLOMVDhkYQ=="))}).Finish()
+	data, err := beku.NewSecret().SetNamespaceAndName("yulibaozi", "rbd-secret").SetType(beku.SecretTypeOpaque).SetDataString(map[string]string{"key": beku.Base64Encode([]byte("AQAqfzNaoafxHLBAAS7qY64uE/ddqWLOMVDhkYQ=="))}).Finish()
 	if err != nil {
 		panic(err)
 	}

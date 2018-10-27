@@ -68,6 +68,29 @@ func ResourceMapsToK8s(maps map[ResourceName]string) (v1.ResourceList, error) {
 	return data, nil
 }
 
+// FromInt creates an IntOrString object with an int32 value. It is
+// your responsibility not to call this method with a value greater
+// than int32.
+// TODO: convert to (val int32)
+func FromInt(val int) intstr.IntOrString {
+	return intstr.IntOrString{Type: intstr.Int, IntVal: int32(val)}
+}
+
+// FromString creates an IntOrString object with a string value.
+func FromString(val string) intstr.IntOrString {
+	return intstr.IntOrString{Type: intstr.String, StrVal: val}
+}
+
+// Parse the given string and try to convert it to an integer before
+// setting it as a string value.
+func Parse(val string) intstr.IntOrString {
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		return FromString(val)
+	}
+	return FromInt(i)
+}
+
 // httpProbe  container health check  readness and liveness  http probe
 func httpProbe(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *v1.Probe {
 	if initDelaySec <= 0 {
@@ -123,29 +146,6 @@ func tcpProbe(host string, port int, initDelaySec, timeoutSec, periodSec int32) 
 }
 func verifyString(str string) bool          { return !(str == "" || len(str) <= 0) }
 func verifyMap(maps map[string]string) bool { return len(maps) > 0 }
-
-// FromInt creates an IntOrString object with an int32 value. It is
-// your responsibility not to call this method with a value greater
-// than int32.
-// TODO: convert to (val int32)
-func FromInt(val int) intstr.IntOrString {
-	return intstr.IntOrString{Type: intstr.Int, IntVal: int32(val)}
-}
-
-// FromString creates an IntOrString object with a string value.
-func FromString(val string) intstr.IntOrString {
-	return intstr.IntOrString{Type: intstr.String, StrVal: val}
-}
-
-// Parse the given string and try to convert it to an integer before
-// setting it as a string value.
-func Parse(val string) intstr.IntOrString {
-	i, err := strconv.Atoi(val)
-	if err != nil {
-		return FromString(val)
-	}
-	return FromInt(i)
-}
 
 func mapToEnvs(envMap map[string]string) ([]v1.EnvVar, error) {
 	if len(envMap) <= 0 {

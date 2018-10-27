@@ -94,7 +94,13 @@ func (obj *Deployment) SetSelector(labels map[string]string) *Deployment {
 
 // SetAnnotations set Deployment annotations
 func (obj *Deployment) SetAnnotations(annotations map[string]string) *Deployment {
-	obj.dp.SetAnnotations(annotations)
+	if len(obj.dp.Annotations) <= 0 {
+		obj.dp.Annotations = annotations
+		return obj
+	}
+	for key, value := range annotations {
+		obj.dp.Annotations[key] = value
+	}
 	return obj
 }
 
@@ -235,6 +241,14 @@ func (obj *Deployment) SetDeployMaxTime(sec int32) *Deployment {
 	return obj
 }
 
+// SetPodQos set pod  quality of service
+// qosClass: is quality of service,the value only 'Guaranteed','Burstable' and 'BestEffort'
+// autoSet: If your previous settings do not meet the requirements of PodQoS, we will automatically set
+func (obj *Deployment) SetPodQos(qosClass string, autoSet ...bool) *Deployment {
+	obj.SetAnnotations(setQosMap(obj.dp.Annotations, qosClass, autoSet...))
+	return obj
+}
+
 // SetPodLabels set Pod labels
 // when call SetLabels(),you can not use this function.
 func (obj *Deployment) SetPodLabels(labels map[string]string) *Deployment {
@@ -329,6 +343,47 @@ func (obj *Deployment) SetContainer(name, image string, containerPort int32) *De
 	return obj
 }
 
+// SetResourceLimit set container of deployment resource limit,eg:CPU and MEMORY
+func (obj *Deployment) SetResourceLimit(limits map[ResourceName]string) *Deployment {
+	data, err := ResourceMapsToK8s(limits)
+	if err != nil {
+		obj.err = fmt.Errorf("SetResourceLimit err:%v", err)
+		return obj
+	}
+
+	containerLen := len(obj.dp.Spec.Template.Spec.Containers)
+	if containerLen < 1 {
+		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Resources: corev1.ResourceRequirements{Limits: data}}}
+		return obj
+	}
+	for index := 0; index < containerLen; index++ {
+		if obj.dp.Spec.Template.Spec.Containers[index].Resources.Limits == nil {
+			obj.dp.Spec.Template.Spec.Containers[index].Resources.Limits = data
+		}
+	}
+	return obj
+}
+
+// SetResourceRequst set container of deployment resource request,only CPU and MEMORY
+func (obj *Deployment) SetResourceRequst(requests map[ResourceName]string) *Deployment {
+	data, err := ResourceMapsToK8s(requests)
+	if err != nil {
+		obj.err = fmt.Errorf("SetResourceRequst err:%v", err)
+		return obj
+	}
+	containerLen := len(obj.dp.Spec.Template.Spec.Containers)
+	if containerLen < 1 {
+		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Resources: corev1.ResourceRequirements{Requests: data}}}
+		return obj
+	}
+	for index := 0; index < containerLen; index++ {
+		if obj.dp.Spec.Template.Spec.Containers[index].Resources.Requests == nil {
+			obj.dp.Spec.Template.Spec.Containers[index].Resources.Requests = data
+		}
+	}
+	return obj
+}
+
 // SetEnvs set Pod Environmental variable
 func (obj *Deployment) SetEnvs(envMap map[string]string) *Deployment {
 	envs, err := mapToEnvs(envMap)
@@ -373,7 +428,30 @@ func (obj *Deployment) verify() {
 	if obj.dp.Spec.Selector == nil {
 		obj.SetSelector(obj.GetPodLabel())
 	}
+
+	//check qos set,if err!=nil, check need auto set qos
+	presentQos, err := qosCheck(obj.dp.Annotations[qosKey], obj.dp.Spec.Template.Spec)
+	if err != nil {
+		if obj.dp.Annotations[autoQosKey] == "true" {
+			err := obj.autoSetQos(presentQos)
+			if err != nil {
+				obj.err = err
+				return
+			}
+		} else {
+			obj.err = err
+			return
+		}
+	}
 	obj.dp.Kind = "Deployment"
 	obj.dp.APIVersion = "apps/v1"
+	for index := range obj.dp.Spec.Template.Spec.Containers {
+		obj.dp.Spec.Template.Spec.Containers[index].ImagePullPolicy = corev1.PullIfNotPresent
+	}
 	return
+}
+
+// autoSetQos auto set Pod of Deployment QOS
+func (obj *Deployment) autoSetQos(presentQos string) error {
+	return autoSetQos(obj.dp.Annotations[qosKey], presentQos, &obj.dp.Spec.Template.Spec)
 }
