@@ -1,5 +1,4 @@
 # beku
-[![Gitter](https://badges.gitter.im/yulibaozi/beku.svg)](https://gitter.im/beku/wechat)
 [![GoDoc](https://godoc.org/github.com/imroc/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yulibaozi/beku)](https://goreportcard.com/badge/github.com/yulibaozi/beku)
 
