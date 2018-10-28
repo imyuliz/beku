@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/yulibaozi/mapper"
@@ -77,7 +76,7 @@ func (obj *Deployment) SetLabels(labels map[string]string) *Deployment {
 // and you can not be SetLabels
 func (obj *Deployment) SetSelector(labels map[string]string) *Deployment {
 	if len(labels) <= 0 {
-		obj.err = errors.New("LabelSelector set error,Labels is not allowed to be empty ")
+		obj.error(errors.New("SetSelector err,label is not allowed to be empty"))
 		return obj
 	}
 	if obj.dp.Spec.Selector == nil {
@@ -138,7 +137,8 @@ func (obj *Deployment) SetHistoryLimit(limit int32) *Deployment {
 // headers: headers[0] is HTTP Header, do not fill if you do not need to set
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetHTTPLiveness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *Deployment {
-	return obj.setLiveness(httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+	setLiveness(&obj.dp.Spec.Template, httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+	return obj
 }
 
 // SetCMDLiveness set container liveness of cmd style
@@ -148,7 +148,8 @@ func (obj *Deployment) SetHTTPLiveness(port int, path string, initDelaySec, time
 // headers: headers[0] is HTTP Header, do not fill if you do not need to set
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetCMDLiveness(cmd []string, initDelaySec, timeoutSec, periodSec int32) *Deployment {
-	return obj.setLiveness(cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+	setLiveness(&obj.dp.Spec.Template, cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+	return obj
 }
 
 // SetTCPLiveness set container liveness of tcp style
@@ -159,24 +160,7 @@ func (obj *Deployment) SetCMDLiveness(cmd []string, initDelaySec, timeoutSec, pe
 // headers: headers[0] is HTTP Header, do not fill if you do not need to set
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetTCPLiveness(host string, port int, initDelaySec, timeoutSec, periodSec int32) *Deployment {
-	return obj.setLiveness(tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
-}
-
-func (obj *Deployment) setLiveness(probe *corev1.Probe) *Deployment {
-	if len(obj.dp.Spec.Template.Spec.Containers) <= 0 {
-		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{LivenessProbe: probe}}
-		return obj
-	}
-	obj.dp.Spec.Template.Spec.Containers[0].LivenessProbe = probe
-	return obj
-}
-
-func (obj *Deployment) setReadness(probe *corev1.Probe) *Deployment {
-	if len(obj.dp.Spec.Template.Spec.Containers) <= 0 {
-		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{ReadinessProbe: probe}}
-		return obj
-	}
-	obj.dp.Spec.Template.Spec.Containers[0].ReadinessProbe = probe
+	setLiveness(&obj.dp.Spec.Template, tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
 	return obj
 }
 
@@ -186,7 +170,8 @@ func (obj *Deployment) setReadness(probe *corev1.Probe) *Deployment {
 // periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetHTTPReadness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *Deployment {
-	return obj.setReadness(httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+	setReadness(&obj.dp.Spec.Template, httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+	return obj
 }
 
 // SetCMDReadness set container readness of cmd style
@@ -196,7 +181,8 @@ func (obj *Deployment) SetHTTPReadness(port int, path string, initDelaySec, time
 // headers: headers[0] is HTTP Header, do not fill if you do not need to set
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetCMDReadness(cmd []string, initDelaySec, timeoutSec, periodSec int32) *Deployment {
-	return obj.setReadness(cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+	setReadness(&obj.dp.Spec.Template, cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+	return obj
 }
 
 // SetTCPReadness set container readness of tcp style
@@ -207,7 +193,8 @@ func (obj *Deployment) SetCMDReadness(cmd []string, initDelaySec, timeoutSec, pe
 // headers: headers[0] is HTTP Header, do not fill if you do not need to set
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetTCPReadness(host string, port int, initDelaySec, timeoutSec, periodSec int32) *Deployment {
-	return obj.setReadness(tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
+	setReadness(&obj.dp.Spec.Template, tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
+	return obj
 }
 
 // SetMatchExpressions set Deployment match expressions
@@ -266,20 +253,7 @@ func (obj *Deployment) GetPodLabel() map[string]string {
 // volumeName: this is Custom field,you can define VolumeSource name,will be used of the container MountPath,
 // claimName: this is PersistentVolumeClaim(PVC) name,the PVC and Deployment must on same namespace and exist.
 func (obj *Deployment) SetPVClaim(volumeName, claimName string) *Deployment {
-	volume := corev1.Volume{
-		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-				ClaimName: claimName,
-				ReadOnly:  false,
-			},
-		},
-	}
-	if len(obj.dp.Spec.Template.Spec.Volumes) <= 0 {
-		obj.dp.Spec.Template.Spec.Volumes = []corev1.Volume{volume}
-		return obj
-	}
-	obj.dp.Spec.Template.Spec.Volumes = append(obj.dp.Spec.Template.Spec.Volumes, volume)
+	obj.error(setPVClaim(&obj.dp.Spec.Template, volumeName, claimName))
 	return obj
 }
 
@@ -289,20 +263,15 @@ func (obj *Deployment) SetPVClaim(volumeName, claimName string) *Deployment {
 // on the other hand SetPVCMounts() function only mount first Container,and On the Container you can volumeMount many PersistentVolumeClaim.
 // mounthPath: runtime container dir eg:/var/lib/mysql
 func (obj *Deployment) SetPVCMounts(volumeName, mounthPath string) *Deployment {
-	volumeMount := corev1.VolumeMount{Name: volumeName, MountPath: mounthPath}
-	if len(obj.dp.Spec.Template.Spec.Containers) <= 0 {
-		obj.dp.Spec.Template.Spec.Containers = append(obj.dp.Spec.Template.Spec.Containers, corev1.Container{
-			VolumeMounts: []corev1.VolumeMount{volumeMount},
-		})
-		return obj
+	obj.error(setPVCMounts(&obj.dp.Spec.Template, volumeName, mounthPath))
+	return nil
+}
+
+func (obj *Deployment) error(err error) {
+	if obj.err != nil {
+		return
 	}
-	//only mount first container and first container can mount many data source.
-	if len(obj.dp.Spec.Template.Spec.Containers[0].VolumeMounts) <= 0 {
-		obj.dp.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{volumeMount}
-		return obj
-	}
-	obj.dp.Spec.Template.Spec.Containers[0].VolumeMounts = append(obj.dp.Spec.Template.Spec.Containers[0].VolumeMounts, volumeMount)
-	return obj
+	obj.err = err
 }
 
 // SetContainer set Deployment container
@@ -310,97 +279,25 @@ func (obj *Deployment) SetPVCMounts(volumeName, mounthPath string) *Deployment {
 // image:image is image name ,must input image
 // containerPort: image expose containerPort,must input containerPort
 func (obj *Deployment) SetContainer(name, image string, containerPort int32) *Deployment {
-	// This must be a valid port number, 0 < x < 65536.
-	if containerPort <= 0 || containerPort >= 65536 {
-		obj.err = errors.New("SetContainer err, container Port range: 0 < containerPort < 65536")
-		return obj
-	}
-	if !verifyString(image) {
-		obj.err = errors.New("SetContainer err, image is not allowed to be empty")
-		return obj
-	}
-	port := corev1.ContainerPort{ContainerPort: containerPort}
-	container := corev1.Container{
-		Name:  name,
-		Image: image,
-		Ports: []corev1.ContainerPort{port},
-	}
-	containersLen := len(obj.dp.Spec.Template.Spec.Containers)
-	if containersLen < 1 {
-		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{container}
-		return obj
-	}
-	for index := 0; index < containersLen; index++ {
-		img := strings.TrimSpace(obj.dp.Spec.Template.Spec.Containers[index].Image)
-		if img == "" || len(img) <= 0 {
-			obj.dp.Spec.Template.Spec.Containers[index].Name = name
-			obj.dp.Spec.Template.Spec.Containers[index].Image = image
-			obj.dp.Spec.Template.Spec.Containers[index].Ports = []corev1.ContainerPort{port}
-			return obj
-		}
-	}
-	obj.dp.Spec.Template.Spec.Containers = append(obj.dp.Spec.Template.Spec.Containers, container)
+	obj.error(setContainer(&obj.dp.Spec.Template, name, image, containerPort))
 	return obj
 }
 
 // SetResourceLimit set container of deployment resource limit,eg:CPU and MEMORY
 func (obj *Deployment) SetResourceLimit(limits map[ResourceName]string) *Deployment {
-	data, err := ResourceMapsToK8s(limits)
-	if err != nil {
-		obj.err = fmt.Errorf("SetResourceLimit err:%v", err)
-		return obj
-	}
-
-	containerLen := len(obj.dp.Spec.Template.Spec.Containers)
-	if containerLen < 1 {
-		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Resources: corev1.ResourceRequirements{Limits: data}}}
-		return obj
-	}
-	for index := 0; index < containerLen; index++ {
-		if obj.dp.Spec.Template.Spec.Containers[index].Resources.Limits == nil {
-			obj.dp.Spec.Template.Spec.Containers[index].Resources.Limits = data
-		}
-	}
+	obj.error(setResourceLimit(&obj.dp.Spec.Template, limits))
 	return obj
 }
 
 // SetResourceRequst set container of deployment resource request,only CPU and MEMORY
 func (obj *Deployment) SetResourceRequst(requests map[ResourceName]string) *Deployment {
-	data, err := ResourceMapsToK8s(requests)
-	if err != nil {
-		obj.err = fmt.Errorf("SetResourceRequst err:%v", err)
-		return obj
-	}
-	containerLen := len(obj.dp.Spec.Template.Spec.Containers)
-	if containerLen < 1 {
-		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Resources: corev1.ResourceRequirements{Requests: data}}}
-		return obj
-	}
-	for index := 0; index < containerLen; index++ {
-		if obj.dp.Spec.Template.Spec.Containers[index].Resources.Requests == nil {
-			obj.dp.Spec.Template.Spec.Containers[index].Resources.Requests = data
-		}
-	}
+	obj.error(setResourceRequests(&obj.dp.Spec.Template, requests))
 	return obj
 }
 
 // SetEnvs set Pod Environmental variable
 func (obj *Deployment) SetEnvs(envMap map[string]string) *Deployment {
-	envs, err := mapToEnvs(envMap)
-	if err != nil {
-		obj.err = err
-		return obj
-	}
-	containerLen := len(obj.dp.Spec.Template.Spec.Containers)
-	if containerLen < 1 {
-		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Env: envs}}
-		return obj
-	}
-	for index := 0; index < containerLen; index++ {
-		if obj.dp.Spec.Template.Spec.Containers[index].Env == nil {
-			obj.dp.Spec.Template.Spec.Containers[index].Env = envs
-		}
-	}
+	obj.error(setEnvs(&obj.dp.Spec.Template, envMap))
 	return obj
 }
 

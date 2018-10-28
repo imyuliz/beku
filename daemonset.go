@@ -2,10 +2,8 @@ package beku
 
 import (
 	"errors"
-	"strings"
 
 	"k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,62 +80,153 @@ func (obj *DaemonSet) SetPodLabels(labels map[string]string) *DaemonSet {
 // image is necessary, image very important
 // containerPort container port,this is necessary
 func (obj *DaemonSet) SetContainer(name, image string, containerPort int32) *DaemonSet {
-	if containerPort <= 0 || containerPort >= 65536 {
-		obj.err = errors.New("SetContainer err, container Port range: 0 < containerPort < 65536")
-		return obj
-	}
-	if !verifyString(image) {
-		obj.err = errors.New("SetContainer err, image is not allowed to be empty")
-		return obj
-	}
-	port := corev1.ContainerPort{ContainerPort: containerPort}
-	container := corev1.Container{
-		Name:  name,
-		Image: image,
-		Ports: []corev1.ContainerPort{port},
-	}
-	containersLen := len(obj.ds.Spec.Template.Spec.Containers)
-	if containersLen < 1 {
-		obj.ds.Spec.Template.Spec.Containers = []corev1.Container{container}
-		return obj
-	}
-	for index := 0; index < containersLen; index++ {
-		// if iamge not exist
-		img := strings.TrimSpace(obj.ds.Spec.Template.Spec.Containers[index].Image)
-		if img == "" || len(img) <= 0 {
-			obj.ds.Spec.Template.Spec.Containers[index].Name = name
-			obj.ds.Spec.Template.Spec.Containers[index].Image = image
-			obj.ds.Spec.Template.Spec.Containers[index].Ports = []corev1.ContainerPort{port}
-			return obj
-		}
-	}
-	obj.ds.Spec.Template.Spec.Containers = append(obj.ds.Spec.Template.Spec.Containers, container)
+	obj.error(setContainer(&obj.ds.Spec.Template, name, image, containerPort))
 	return obj
+}
+
+// SetAnnotations set DaemonSet annotations
+func (obj *DaemonSet) SetAnnotations(annotations map[string]string) *DaemonSet {
+	if len(obj.ds.Annotations) <= 0 {
+		obj.ds.Annotations = annotations
+		return obj
+	}
+	for key, value := range annotations {
+		obj.ds.Annotations[key] = value
+	}
+	return obj
+}
+
+// SetPodQos set pod  quality of service
+// qosClass: is quality of service,the value only 'Guaranteed','Burstable' and 'BestEffort'
+// autoSet: If your previous settings do not meet the requirements of PodQoS, we will automatically set
+func (obj *DaemonSet) SetPodQos(qosClass string, autoSet ...bool) *DaemonSet {
+	obj.SetAnnotations(setQosMap(obj.ds.Annotations, qosClass, autoSet...))
+	return obj
+}
+
+// SetHTTPLiveness set container liveness of http style
+// port: required
+// path: http request URL,eg: /api/v1/posts/1
+// initDelaySec: how long time after the first start of the program the probe is executed for the first time.(sec)
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *DaemonSet) SetHTTPLiveness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *DaemonSet {
+	setLiveness(&obj.ds.Spec.Template, httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+	return obj
+}
+
+// SetCMDLiveness set container liveness of cmd style
+// cmd: execute liveness probe as commond line
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *DaemonSet) SetCMDLiveness(cmd []string, initDelaySec, timeoutSec, periodSec int32) *DaemonSet {
+	setLiveness(&obj.ds.Spec.Template, cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+	return obj
+}
+
+// SetTCPLiveness set container liveness of tcp style
+// host: default is ""
+// port: required
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *DaemonSet) SetTCPLiveness(host string, port int, initDelaySec, timeoutSec, periodSec int32) *DaemonSet {
+	setLiveness(&obj.ds.Spec.Template, tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
+	return obj
+}
+
+// SetHTTPReadness set container readness
+// initDelaySec: how long time after the first start of the program the probe is executed for the first time.(sec)
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *DaemonSet) SetHTTPReadness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *DaemonSet {
+	setReadness(&obj.ds.Spec.Template, httpProbe(port, path, initDelaySec, timeoutSec, periodSec, headers...))
+	return obj
+}
+
+// SetCMDReadness set container readness of cmd style
+// cmd: execute readness probe as commond line
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe? defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *DaemonSet) SetCMDReadness(cmd []string, initDelaySec, timeoutSec, periodSec int32) *DaemonSet {
+	setReadness(&obj.ds.Spec.Template, cmdProbe(cmd, initDelaySec, timeoutSec, periodSec))
+	return obj
+}
+
+// SetTCPReadness set container readness of tcp style
+// host: default is ""
+// port: required
+// timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
+// periodSec: how often does the probe? defaults to 1 second. Minimum value is 1,Except for the first time?
+// headers: headers[0] is HTTP Header, do not fill if you do not need to set
+// on the other hand, only **first container** will be set livenessProbe
+func (obj *DaemonSet) SetTCPReadness(host string, port int, initDelaySec, timeoutSec, periodSec int32) *DaemonSet {
+	setReadness(&obj.ds.Spec.Template, tcpProbe(host, port, initDelaySec, timeoutSec, periodSec))
+	return obj
+}
+
+// SetPVClaim set DaemonSet PersistentVolumeClaimVolumeSource
+// params:
+// volumeName: this is Custom field,you can define VolumeSource name,will be used of the container MountPath,
+// claimName: this is PersistentVolumeClaim(PVC) name,the PVC and DaemonSet must on same namespace and exist.
+func (obj *DaemonSet) SetPVClaim(volumeName, claimName string) *DaemonSet {
+	obj.error(setPVClaim(&obj.ds.Spec.Template, volumeName, claimName))
+	return obj
+}
+
+//SetPVCMounts mount PersistentVolumeClaim on container
+// params:
+// volumeName:the param is SetPVClaim() function volumeName,and when you call SetPVCMounts function you must call SetPVClaim function,and no order.
+// on the other hand SetPVCMounts() function only mount first Container,and On the Container you can volumeMount many PersistentVolumeClaim.
+// mounthPath: runtime container dir eg:/var/lib/mysql
+func (obj *DaemonSet) SetPVCMounts(volumeName, mounthPath string) *DaemonSet {
+	obj.error(setPVCMounts(&obj.ds.Spec.Template, volumeName, mounthPath))
+	return nil
 }
 
 // SetEnvs set Pod Environmental variable
 func (obj *DaemonSet) SetEnvs(envMap map[string]string) *DaemonSet {
-	envs, err := mapToEnvs(envMap)
-	if err != nil {
-		obj.err = err
-		return obj
+	obj.error(setEnvs(&obj.ds.Spec.Template, envMap))
+	return obj
+}
+
+// SetMinReadySeconds set DaemonSet minreadyseconds default 600
+func (obj *DaemonSet) SetMinReadySeconds(sec int32) *DaemonSet {
+	if sec < 0 {
+		sec = 0
 	}
-	containerLen := len(obj.ds.Spec.Template.Spec.Containers)
-	if containerLen < 1 {
-		obj.ds.Spec.Template.Spec.Containers = []corev1.Container{corev1.Container{Env: envs}}
-		return obj
+	obj.ds.Spec.MinReadySeconds = sec
+	return obj
+}
+
+// SetHistoryLimit set DaemonSet history version numbers, limit default 10
+// the field is used to Rollback
+func (obj *DaemonSet) SetHistoryLimit(limit int32) *DaemonSet {
+	if limit <= 0 {
+		limit = 10
 	}
-	for index := 0; index < containerLen; index++ {
-		if obj.ds.Spec.Template.Spec.Containers[index].Env == nil {
-			obj.ds.Spec.Template.Spec.Containers[index].Env = envs
-		}
-	}
+	obj.ds.Spec.RevisionHistoryLimit = &limit
 	return obj
 }
 
 // GetPodLabel get pod labels
 func (obj *DaemonSet) GetPodLabel() map[string]string {
 	return obj.ds.Spec.Template.GetLabels()
+}
+
+func (obj *DaemonSet) error(err error) {
+	if obj.err != nil {
+		return
+	}
+	obj.err = err
 }
 
 // verify check service necessary value, input the default field and input related data.
@@ -156,6 +245,25 @@ func (obj *DaemonSet) verify() {
 	if len(obj.GetPodLabel()) < 1 {
 		obj.err = errors.New("Pod Labels is not allowed to be empty,you can call SetPodLabels input")
 	}
+	//check qos set,if err!=nil, check need auto set qos
+	presentQos, err := qosCheck(obj.ds.Annotations[qosKey], obj.ds.Spec.Template.Spec)
+	if err != nil {
+		if obj.ds.Annotations[autoQosKey] == "true" {
+			err := obj.autoSetQos(presentQos)
+			if err != nil {
+				obj.err = err
+				return
+			}
+		} else {
+			obj.err = err
+			return
+		}
+	}
 	obj.ds.Kind = "DaemonSet"
 	obj.ds.APIVersion = "app/v1"
+}
+
+// autoSetQos auto set Pod of Deployment QOS
+func (obj *DaemonSet) autoSetQos(presentQos string) error {
+	return autoSetQos(obj.ds.Annotations[qosKey], presentQos, &obj.ds.Spec.Template.Spec)
 }
