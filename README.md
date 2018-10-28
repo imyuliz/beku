@@ -1,4 +1,6 @@
-### beku
+# beku
+[![GoDoc](https://godoc.org/github.com/imroc/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
+
 A golang kubernetes deploy library for humans.
 
 
