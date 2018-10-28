@@ -3,10 +3,8 @@ package beku
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/ghodss/yaml"
-	"github.com/yulibaozi/mapper"
 	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -199,13 +197,14 @@ func (obj *Deployment) SetTCPReadness(host string, port int, initDelaySec, timeo
 
 // SetMatchExpressions set Deployment match expressions
 // the field is used to set complicated Label.
-// ToDo: mapper error.
 func (obj *Deployment) SetMatchExpressions(ents []LabelSelectorRequirement) *Deployment {
 	requirements := make([]metav1.LabelSelectorRequirement, 0)
-	err := mapper.AutoMapper(ents, requirements)
-	if err != nil {
-		obj.err = fmt.Errorf("SetMatchExpressions err:%v", err)
-		return obj
+	for index := range ents {
+		requirements = append(requirements, metav1.LabelSelectorRequirement{
+			Key:      ents[index].Key,
+			Operator: metav1.LabelSelectorOperator(ents[index].Operator),
+			Values:   ents[index].Values,
+		})
 	}
 	if obj.dp.Spec.Selector == nil {
 		obj.dp.Spec.Selector = &metav1.LabelSelector{
