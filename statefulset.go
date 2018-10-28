@@ -16,7 +16,7 @@ type StatefulSet struct {
 	err error
 }
 
-// NewSts  create StatefulSet(sts) and chain funtion call begin with this funtion.
+// NewSts  create StatefulSet(sts) and chain function call begin with this function.
 func NewSts() *StatefulSet { return &StatefulSet{sts: &v1.StatefulSet{}} }
 
 // Finish Chain function call end with this function

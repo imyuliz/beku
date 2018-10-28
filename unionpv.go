@@ -15,7 +15,7 @@ type UnionPV struct {
 }
 
 // NewUnionPV create PersistentVolume,PersistentVolumeClaim and error
-// and chain funtion call begin with this function.
+// and chain function call begin with this function.
 func NewUnionPV() *UnionPV { return &UnionPV{pv: NewPV(), pvc: NewPVC()} }
 
 // Finish Chain function call end with this function

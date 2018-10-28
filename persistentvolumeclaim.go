@@ -16,7 +16,7 @@ type PersistentVolumeClaim struct {
 	err error
 }
 
-// NewPVC create PersistentVolumeClaim(pvc) and chain function call begin with this funtion.
+// NewPVC create PersistentVolumeClaim(pvc) and chain function call begin with this function.
 func NewPVC() *PersistentVolumeClaim { return &PersistentVolumeClaim{pvc: &v1.PersistentVolumeClaim{}} }
 
 // Finish Chain function call end with this function

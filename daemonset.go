@@ -75,7 +75,7 @@ func (obj *DaemonSet) SetPodLabels(labels map[string]string) *DaemonSet {
 }
 
 // SetContainer set DaemonSet container
-// name Not required when only one Conatiner,you can input "".
+// name Not required when only one Container,you can input "".
 // when many container this Field is necessary and cann't repeat
 // image is necessary, image very important
 // containerPort container port,this is necessary
