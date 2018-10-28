@@ -8,6 +8,7 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// setContainer set container
 func setContainer(podTemp *v1.PodTemplateSpec, name, image string, containerPort int32) error {
 	// This must be a valid port number, 0 < x < 65536.
 	if containerPort <= 0 || containerPort >= 65536 {
