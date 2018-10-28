@@ -153,10 +153,45 @@ func (obj *StatefulSet) SetPVClaim(volumeName, claimName string) *StatefulSet {
 // params:
 // volumeName:the param is SetPVClaim() function volumeName,and when you call SetPVCMounts function you must call SetPVClaim function,and no order.
 // on the other hand SetPVCMounts() function only mount first Container,and On the Container you can volumeMount many PersistentVolumeClaim.
-// mounthPath: runtime container dir eg:/var/lib/mysql
-func (obj *StatefulSet) SetPVCMounts(volumeName, mounthPath string) *StatefulSet {
-	obj.error(setPVCMounts(&obj.sts.Spec.Template, volumeName, mounthPath))
+// mountPath: runtime container dir eg:/var/lib/mysql
+func (obj *StatefulSet) SetPVCMounts(volumeName, mountPath string) *StatefulSet {
+	obj.error(setPVCMounts(&obj.sts.Spec.Template, volumeName, mountPath))
 	return nil
+}
+
+// SetPVCTemp set StatefulSet PersistentVolumeClaimTemplate
+// can't call SetPVCMounts() function when you call the function,
+// because SetPVCMounts() function has been called automatically,
+// Don't worry
+func (obj *StatefulSet) SetPVCTemp(pvcName, mountPath string, mode PersistentVolumeAccessMode, requests map[ResourceName]string) *StatefulSet {
+	if !verifyString(pvcName) {
+		obj.error(errors.New("SetPVCTemp failed,pvcName is not allowed to be empty"))
+		return obj
+	}
+	if !verifyString(mountPath) {
+		obj.error(errors.New("SetPVCTemp failed,mountPath is not allowed to be empty"))
+		return obj
+	}
+	reqs, err := ResourceMapsToK8s(requests)
+	if err != nil {
+		obj.error(err)
+		return obj
+	}
+	obj.SetPVCMounts(pvcName, mountPath)
+	temp := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{Name: pvcName},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{mode.ToK8s()},
+			Resources:   corev1.ResourceRequirements{Requests: reqs},
+		},
+	}
+	if len(obj.sts.Spec.VolumeClaimTemplates) <= 0 {
+		obj.sts.Spec.VolumeClaimTemplates = []corev1.PersistentVolumeClaim{temp}
+		return obj
+	}
+	obj.sts.Spec.VolumeClaimTemplates = append(obj.sts.Spec.VolumeClaimTemplates, temp)
+	return obj
+
 }
 
 // SetHTTPLiveness set container liveness of http style

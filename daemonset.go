@@ -186,9 +186,9 @@ func (obj *DaemonSet) SetPVClaim(volumeName, claimName string) *DaemonSet {
 // params:
 // volumeName:the param is SetPVClaim() function volumeName,and when you call SetPVCMounts function you must call SetPVClaim function,and no order.
 // on the other hand SetPVCMounts() function only mount first Container,and On the Container you can volumeMount many PersistentVolumeClaim.
-// mounthPath: runtime container dir eg:/var/lib/mysql
-func (obj *DaemonSet) SetPVCMounts(volumeName, mounthPath string) *DaemonSet {
-	obj.error(setPVCMounts(&obj.ds.Spec.Template, volumeName, mounthPath))
+// mountPath: runtime container dir eg:/var/lib/mysql
+func (obj *DaemonSet) SetPVCMounts(volumeName, mountPath string) *DaemonSet {
+	obj.error(setPVCMounts(&obj.ds.Spec.Template, volumeName, mountPath))
 	return nil
 }
 

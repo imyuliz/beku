@@ -96,8 +96,8 @@ func setEnvs(podTemp *v1.PodTemplateSpec, envMap map[string]string) error {
 	return nil
 }
 
-func setPVCMounts(podTemp *v1.PodTemplateSpec, volumeName, mounthPath string) error {
-	volumeMount := v1.VolumeMount{Name: volumeName, MountPath: mounthPath}
+func setPVCMounts(podTemp *v1.PodTemplateSpec, volumeName, mountPath string) error {
+	volumeMount := v1.VolumeMount{Name: volumeName, MountPath: mountPath}
 	if len(podTemp.Spec.Containers) <= 0 {
 		podTemp.Spec.Containers = append(podTemp.Spec.Containers, v1.Container{
 			VolumeMounts: []v1.VolumeMount{volumeMount},
