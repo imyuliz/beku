@@ -9,7 +9,6 @@ import (
 )
 
 func setContainer(podTemp *v1.PodTemplateSpec, name, image string, containerPort int32) error {
-
 	// This must be a valid port number, 0 < x < 65536.
 	if containerPort <= 0 || containerPort >= 65536 {
 		return errors.New("SetContainer err, container Port range: 0 < containerPort < 65536")

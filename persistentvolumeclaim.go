@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/ghodss/yaml"
-	"github.com/yulibaozi/mapper"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -171,13 +170,14 @@ func (obj *PersistentVolumeClaim) GetSelector() map[string]string {
 
 // SetMatchExpressions set Deployment match expressions
 // the field is used to set complicated Label.
-// ToDo: mapper error.
 func (obj *PersistentVolumeClaim) SetMatchExpressions(ents []LabelSelectorRequirement) *PersistentVolumeClaim {
 	requirements := make([]metav1.LabelSelectorRequirement, 0)
-	err := mapper.AutoMapper(ents, requirements)
-	if err != nil {
-		obj.err = fmt.Errorf("SetMatchExpressions err:%v", err)
-		return obj
+	for index := range ents {
+		requirements = append(requirements, metav1.LabelSelectorRequirement{
+			Key:      ents[index].Key,
+			Operator: metav1.LabelSelectorOperator(ents[index].Operator),
+			Values:   ents[index].Values,
+		})
 	}
 	if obj.pvc.Spec.Selector == nil {
 		obj.pvc.Spec.Selector = &metav1.LabelSelector{
