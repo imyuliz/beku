@@ -39,6 +39,14 @@ func (obj *StatefulSet) YAMLNew(yamlbyts []byte) *StatefulSet {
 	return obj
 }
 
+// Replace replace StatefulSet by Kubernetes resource object
+func (obj *StatefulSet) Replace(sts *v1.StatefulSet) *StatefulSet {
+	if sts != nil {
+		obj.sts = sts
+	}
+	return obj
+}
+
 // SetName set StatefulSet(sts) name
 func (obj *StatefulSet) SetName(name string) *StatefulSet {
 	obj.sts.SetName(name)

@@ -40,6 +40,14 @@ func (obj *Deployment) YAMLNew(yamlbyts []byte) *Deployment {
 	return obj
 }
 
+// Replace replace Deployment by Kubernetes resource object
+func (obj *Deployment) Replace(dp *v1.Deployment) *Deployment {
+	if dp != nil {
+		obj.dp = dp
+	}
+	return obj
+}
+
 // SetName set Deployment name
 func (obj *Deployment) SetName(name string) *Deployment {
 	obj.dp.SetName(name)

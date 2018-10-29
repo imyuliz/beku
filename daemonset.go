@@ -24,6 +24,14 @@ func (obj *DaemonSet) Finish() (*v1.DaemonSet, error) {
 	return obj.ds, obj.err
 }
 
+// Replace replace ds by Kubernetes resource object
+func (obj *DaemonSet) Replace(ds *v1.DaemonSet) *DaemonSet {
+	if ds != nil {
+		obj.ds = ds
+	}
+	return obj
+}
+
 // SetName set DaemonSet(ds) name
 func (obj *DaemonSet) SetName(name string) *DaemonSet {
 	obj.ds.SetName(name)

@@ -43,6 +43,14 @@ func (obj *PersistentVolume) YAMLNew(yamlbyts []byte) *PersistentVolume {
 	return obj
 }
 
+// Replace replace PersistentVolume by Kubernetes resource object
+func (obj *PersistentVolume) Replace(pv *v1.PersistentVolume) *PersistentVolume {
+	if pv != nil {
+		obj.pv = pv
+	}
+	return obj
+}
+
 // SetLabels set PersistentVolume(pv) label
 func (obj *PersistentVolume) SetLabels(labels map[string]string) *PersistentVolume {
 	obj.pv.SetLabels(labels)

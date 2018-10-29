@@ -1,8 +1,10 @@
 package beku
 
 import (
+	"encoding/json"
 	"errors"
 
+	"github.com/ghodss/yaml"
 	"k8s.io/api/core/v1"
 )
 
@@ -21,6 +23,26 @@ func NewCM() *ConfigMap { return &ConfigMap{cm: &v1.ConfigMap{}} }
 func (obj *ConfigMap) Finish() (cm *v1.ConfigMap, err error) {
 	obj.verify()
 	return obj.cm, obj.err
+}
+
+// JSONNew use json data create ConfigMap
+func (obj *ConfigMap) JSONNew(jsonbyts []byte) *ConfigMap {
+	obj.error(json.Unmarshal(jsonbyts, obj.cm))
+	return obj
+}
+
+// YAMLNew use yaml data create ConfigMap
+func (obj *ConfigMap) YAMLNew(yamlbyts []byte) *ConfigMap {
+	obj.error(yaml.Unmarshal(yamlbyts, obj.cm))
+	return obj
+}
+
+// Replace replace cm by Kubernetes resource object
+func (obj *ConfigMap) Replace(cm *v1.ConfigMap) *ConfigMap {
+	if cm != nil {
+		obj.cm = cm
+	}
+	return obj
 }
 
 // SetName set ConfigMap(cm) name
@@ -52,6 +74,13 @@ func (obj *ConfigMap) SetLabels(labels map[string]string) *ConfigMap {
 func (obj *ConfigMap) SetData(data map[string]string) *ConfigMap {
 	obj.cm.Data = data
 	return obj
+}
+
+func (obj *ConfigMap) error(err error) {
+	if obj.err != nil {
+		return
+	}
+	obj.err = err
 }
 
 // verify check ConfigMap necessary value,input default field.

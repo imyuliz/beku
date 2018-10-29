@@ -37,6 +37,14 @@ func (obj *Secret) YAMLNew(yamlbyts []byte) *Secret {
 	return obj
 }
 
+// Replace replace Secret by Kubernetes resource object
+func (obj *Secret) Replace(sec *v1.Secret) *Secret {
+	if sec != nil {
+		obj.sc = sec
+	}
+	return obj
+}
+
 // SetName set Secret name
 func (obj *Secret) SetName(name string) *Secret {
 	obj.sc.SetName(name)

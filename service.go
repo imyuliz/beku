@@ -39,6 +39,14 @@ func (obj *Service) YAMLNew(yamlbyts []byte) *Service {
 	return obj
 }
 
+// Replace replace Service by Kubernetes resource object
+func (obj *Service) Replace(svc *v1.Service) *Service {
+	if svc != nil {
+		obj.svc = svc
+	}
+	return obj
+}
+
 // SetName set service(svc) name
 func (obj *Service) SetName(name string) *Service {
 	obj.svc.SetName(name)

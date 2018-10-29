@@ -53,8 +53,7 @@ func (un *UnionPV) SetNamespace(namespace string) *UnionPV {
 // PersistentVolume can't set namespece because of no such attribute
 func (un *UnionPV) SetNamespaceAndName(namespace, name string) *UnionPV {
 	un.pv.SetName(name)
-	un.pvc.SetName(name)
-	un.pvc.SetNamespace(namespace)
+	un.pvc.SetNamespaceAndName(namespace, name)
 	return un
 }
 

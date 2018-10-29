@@ -39,6 +39,14 @@ func (obj *PersistentVolumeClaim) YAMLNew(yamlbyts []byte) *PersistentVolumeClai
 	return obj
 }
 
+// Replace replace PersistentVolumeClaim by Kubernetes resource object
+func (obj *PersistentVolumeClaim) Replace(pvc *v1.PersistentVolumeClaim) *PersistentVolumeClaim {
+	if pvc != nil {
+		obj.pvc = pvc
+	}
+	return obj
+}
+
 // SetName set PersistentVolumeClaim(pvc) name
 func (obj *PersistentVolumeClaim) SetName(name string) *PersistentVolumeClaim {
 	obj.pvc.SetName(name)
