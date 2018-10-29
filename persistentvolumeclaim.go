@@ -29,13 +29,13 @@ func (obj *PersistentVolumeClaim) Finish() (*v1.PersistentVolumeClaim, error) {
 
 // JSONNew use json data create PersistentVolumeClaim(pvc)
 func (obj *PersistentVolumeClaim) JSONNew(jsonbyts []byte) *PersistentVolumeClaim {
-	obj.err = json.Unmarshal(jsonbyts, obj.pvc)
+	obj.error(json.Unmarshal(jsonbyts, obj.pvc))
 	return obj
 }
 
 // YAMLNew use yaml data create PersistentVolumeClaim(pvc)
 func (obj *PersistentVolumeClaim) YAMLNew(yamlbyts []byte) *PersistentVolumeClaim {
-	obj.err = yaml.Unmarshal(yamlbyts, obj.pvc)
+	obj.error(yaml.Unmarshal(yamlbyts, obj.pvc))
 	return obj
 }
 
@@ -105,7 +105,8 @@ func (obj *PersistentVolumeClaim) SetAccessModes(modes []PersistentVolumeAccessM
 func (obj *PersistentVolumeClaim) SetVolumeMode(volumeMode PersistentVolumeMode) *PersistentVolumeClaim {
 	m := volumeMode.ToK8s()
 	if m == nil {
-		obj.err = fmt.Errorf("SetVolumeMode err: the volumeMode: %v is not allowed", volumeMode)
+		obj.error(fmt.Errorf("SetVolumeMode err: the volumeMode: %v is not allowed", volumeMode))
+		return obj
 	}
 	obj.pvc.Spec.VolumeMode = m
 	return obj
@@ -115,7 +116,7 @@ func (obj *PersistentVolumeClaim) SetVolumeMode(volumeMode PersistentVolumeMode)
 func (obj *PersistentVolumeClaim) SetResourceLimits(limits map[ResourceName]string) *PersistentVolumeClaim {
 	data, err := ResourceMapsToK8s(limits)
 	if err != nil {
-		obj.err = fmt.Errorf("SetResourceLimit err:%v", err)
+		obj.error(fmt.Errorf("SetResourceLimit err:%v", err))
 		return obj
 	}
 	obj.pvc.Spec.Resources.Limits = data
@@ -126,7 +127,7 @@ func (obj *PersistentVolumeClaim) SetResourceLimits(limits map[ResourceName]stri
 func (obj *PersistentVolumeClaim) SetResourceRequests(requests map[ResourceName]string) *PersistentVolumeClaim {
 	data, err := ResourceMapsToK8s(requests)
 	if err != nil {
-		obj.err = fmt.Errorf("SetResourceRequests err:%v", err)
+		obj.error(fmt.Errorf("SetResourceRequests err:%v", err))
 		return obj
 	}
 	obj.pvc.Spec.Resources.Requests = data
@@ -136,7 +137,7 @@ func (obj *PersistentVolumeClaim) SetResourceRequests(requests map[ResourceName]
 // SetStorageClassName set PersistentVolumeClaim(pvc) storageclasss name
 func (obj *PersistentVolumeClaim) SetStorageClassName(classname string) *PersistentVolumeClaim {
 	if classname == "" || len(classname) <= 0 {
-		obj.err = errors.New("SetStorageClassName err, StorageClassName is not allowed to be empty")
+		obj.error(errors.New("SetStorageClassName err, StorageClassName is not allowed to be empty"))
 		return obj
 	}
 	obj.pvc.Spec.StorageClassName = &classname
@@ -146,7 +147,7 @@ func (obj *PersistentVolumeClaim) SetStorageClassName(classname string) *Persist
 // SetSelector set PersistentVolumeClaim(pvc) selector
 func (obj *PersistentVolumeClaim) SetSelector(labels map[string]string) *PersistentVolumeClaim {
 	if len(labels) < 1 {
-		obj.err = errors.New("SetSelector error, labels is not allowed to be empty")
+		obj.error(errors.New("SetSelector error, labels is not allowed to be empty"))
 		return obj
 	}
 	if obj.pvc.Spec.Selector == nil {
@@ -189,21 +190,29 @@ func (obj *PersistentVolumeClaim) SetMatchExpressions(ents []LabelSelectorRequir
 	return obj
 }
 
+func (obj *PersistentVolumeClaim) error(err error) {
+	if obj.err != nil {
+		return
+	}
+	obj.err = err
+	return
+}
+
 // verify check service necessary value, input the default field and input related data.
 func (obj *PersistentVolumeClaim) verify() {
 	if obj.err != nil {
 		return
 	}
 	if !verifyString(obj.pvc.GetName()) {
-		obj.err = errors.New("pvc name not allow empty")
+		obj.err = errors.New("pvc name is not allowed to be empty")
 		return
 	}
 	if obj.pvc.Spec.AccessModes == nil || len(obj.pvc.Spec.AccessModes) < 1 {
-		obj.err = errors.New("pvc accessModes not allow empty")
+		obj.err = errors.New("pvc accessModes is not allowed to be empty")
 		return
 	}
 	if obj.pvc.Spec.Resources.Limits == nil && obj.pvc.Spec.Resources.Requests == nil {
-		obj.err = errors.New("both limits and requests is nil not allow")
+		obj.err = errors.New("both limits and requests is empty not allowed")
 		return
 	}
 	obj.pvc.Kind = "PersistentVolumeClaim"

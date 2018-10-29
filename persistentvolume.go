@@ -33,13 +33,13 @@ func (obj *PersistentVolume) Finish() (*v1.PersistentVolume, error) {
 
 // JSONNew use json data create PersistentVolume(pv)
 func (obj *PersistentVolume) JSONNew(jsonbyte []byte) *PersistentVolume {
-	obj.err = json.Unmarshal(jsonbyte, obj.pv)
+	obj.error(json.Unmarshal(jsonbyte, obj.pv))
 	return obj
 }
 
 // YAMLNew use yaml data create PersistentVolume(pv)
 func (obj *PersistentVolume) YAMLNew(yamlbyts []byte) *PersistentVolume {
-	obj.err = yaml.Unmarshal(yamlbyts, obj.pv)
+	obj.error(yaml.Unmarshal(yamlbyts, obj.pv))
 	return obj
 }
 
@@ -90,17 +90,17 @@ func (obj *PersistentVolume) SetAccessModes(modes []PersistentVolumeAccessMode) 
 // SetNFS set PersistentVolume(pv) volume source is nfs
 func (obj *PersistentVolume) SetNFS(nfs *NFSVolumeSource) *PersistentVolume {
 	if !verifyString(nfs.Server) {
-		obj.err = errors.New("SetNFS err, nfs server is not allowed to be empty")
+		obj.error(errors.New("SetNFS err, nfs server is not allowed to be empty"))
 		return obj
 	}
 	if !verifyString(nfs.Path) {
-		obj.err = errors.New("SetNFS err, nfs path is not allowed to be empty")
+		obj.error(errors.New("SetNFS err, nfs path is not allowed to be empty"))
 		return obj
 	}
 	nfsv := new(v1.NFSVolumeSource)
 	err := mapper.Mapper(nfs, nfsv)
 	if err != nil {
-		obj.err = fmt.Errorf("SetNFS err:%v", err)
+		obj.error(fmt.Errorf("SetNFS err:%v", err))
 		return obj
 	}
 	obj.pv.Spec.PersistentVolumeSource.NFS = nfsv
@@ -111,7 +111,7 @@ func (obj *PersistentVolume) SetNFS(nfs *NFSVolumeSource) *PersistentVolume {
 func (obj *PersistentVolume) SetCapacity(capMaps map[ResourceName]string) *PersistentVolume {
 	data, err := ResourceMapsToK8s(capMaps)
 	if err != nil {
-		obj.err = fmt.Errorf("SetCapacity err:%v", err)
+		obj.error(fmt.Errorf("SetCapacity err:%v", err))
 		return obj
 	}
 	obj.pv.Spec.Capacity = data
@@ -121,7 +121,7 @@ func (obj *PersistentVolume) SetCapacity(capMaps map[ResourceName]string) *Persi
 // SetCephFS set PersistentVolume(pv) volume source is ceph
 func (obj *PersistentVolume) SetCephFS(cephFs *CephFSPersistentVolumeSource) *PersistentVolume {
 	if len(cephFs.Monitors) < 1 {
-		obj.err = errors.New("SetCephFS err,cephFS monitor is not allowed to be empty")
+		obj.error(errors.New("SetCephFS err,cephFS monitor is not allowed to be empty"))
 		return obj
 	}
 	ceph := &v1.CephFSPersistentVolumeSource{
@@ -144,15 +144,15 @@ func (obj *PersistentVolume) SetCephFS(cephFs *CephFSPersistentVolumeSource) *Pe
 // SetRBD  set PersistentVolume(pv) volume source is RBD
 func (obj *PersistentVolume) SetRBD(rbd *RBDPersistentVolumeSource) *PersistentVolume {
 	if len(rbd.CephMonitors) < 1 {
-		obj.err = errors.New("SetRBD err, CephMonitor is not allowed to be empty")
+		obj.error(errors.New("SetRBD err, CephMonitor is not allowed to be empty"))
 		return obj
 	}
 	if !verifyString(rbd.RBDImage) {
-		obj.err = errors.New("SetRBD err, RBDImage is not allowed to be empty")
+		obj.error(errors.New("SetRBD err, RBDImage is not allowed to be empty"))
 		return obj
 	}
 	if !verifyString(rbd.FSType) {
-		obj.err = errors.New("SetRBD err, RBD.FSType is not allowed to be empty,maybe you can input one of  'ext4', 'xfs', 'ntfs'")
+		obj.error(errors.New("SetRBD err, RBD.FSType is not allowed to be empty,maybe you can input one of  'ext4', 'xfs', 'ntfs'"))
 		return obj
 	}
 	rbds := &v1.RBDPersistentVolumeSource{
@@ -172,6 +172,13 @@ func (obj *PersistentVolume) SetRBD(rbd *RBDPersistentVolumeSource) *PersistentV
 	}
 	obj.pv.Spec.PersistentVolumeSource.RBD = rbds
 	return obj
+}
+
+func (obj *PersistentVolume) error(err error) {
+	if obj.err != nil {
+		return
+	}
+	obj.err = err
 }
 
 // verify check service necessary value, input the default field and input related data.

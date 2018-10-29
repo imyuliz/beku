@@ -23,21 +23,19 @@ func NewSts() *StatefulSet { return &StatefulSet{sts: &v1.StatefulSet{}} }
 // return Kubernetes resource object StatefulSet and error.
 // In the function, it will check necessary parameters、input the default field。
 func (obj *StatefulSet) Finish() (*v1.StatefulSet, error) {
-	if obj.err != nil {
-		return nil, obj.err
-	}
-	return obj.sts, nil
+	obj.verify()
+	return obj.sts, obj.err
 }
 
 // JSONNew use json data create StatelfulSet
 func (obj *StatefulSet) JSONNew(jsonbyts []byte) *StatefulSet {
-	obj.err = json.Unmarshal(jsonbyts, obj.sts)
+	obj.error(json.Unmarshal(jsonbyts, obj.sts))
 	return obj
 }
 
 // YAMLNew use yaml data create StatefulSet
 func (obj *StatefulSet) YAMLNew(yamlbyts []byte) *StatefulSet {
-	obj.err = yaml.Unmarshal(yamlbyts, obj.sts)
+	obj.error(yaml.Unmarshal(yamlbyts, obj.sts))
 	return obj
 }
 
@@ -47,9 +45,16 @@ func (obj *StatefulSet) SetName(name string) *StatefulSet {
 	return obj
 }
 
-// SetNameSpace set StatefulSet(sts) namespace ,default namespace is 'default'
-func (obj *StatefulSet) SetNameSpace(namespace string) *StatefulSet {
+// SetNamespace set StatefulSet(sts) namespace ,default namespace is 'default'
+func (obj *StatefulSet) SetNamespace(namespace string) *StatefulSet {
 	obj.sts.SetNamespace(namespace)
+	return obj
+}
+
+// SetNamespaceAndName set StatefulSet namespace,set Pod namespace,set Deployment name.
+func (obj *StatefulSet) SetNamespaceAndName(namespace, name string) *StatefulSet {
+	obj.SetNamespace(namespace)
+	obj.SetName(name)
 	return obj
 }
 

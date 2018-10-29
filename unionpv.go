@@ -49,6 +49,15 @@ func (un *UnionPV) SetNamespace(namespace string) *UnionPV {
 	return un
 }
 
+// SetNamespaceAndName set PersistentVolumeClaim namespace and name, set PersistentVolumeClaim name
+// PersistentVolume can't set namespece because of no such attribute
+func (un *UnionPV) SetNamespaceAndName(namespace, name string) *UnionPV {
+	un.pv.SetName(name)
+	un.pvc.SetName(name)
+	un.pvc.SetNamespace(namespace)
+	return un
+}
+
 // SetAccessMode set PersistentVolume and PersistentVolumeClaim accessmode
 func (un *UnionPV) SetAccessMode(mode PersistentVolumeAccessMode) *UnionPV {
 	un.pvc.SetAccessMode(mode)
@@ -125,5 +134,4 @@ func (un *UnionPV) verify() {
 		pvclabels = map[string]string{"name": pvcname}
 		un.pvc.SetLabels(pvclabels)
 	}
-
 }

@@ -29,13 +29,13 @@ func (obj *Service) Finish() (svc *v1.Service, err error) {
 
 // JSONNew use json data create service(svc)
 func (obj *Service) JSONNew(jsonbyts []byte) *Service {
-	obj.err = json.Unmarshal(jsonbyts, obj.svc)
+	obj.error(json.Unmarshal(jsonbyts, obj.svc))
 	return obj
 }
 
 // YAMLNew use yaml data create service(svc)
 func (obj *Service) YAMLNew(yamlbyts []byte) *Service {
-	obj.err = yaml.Unmarshal(yamlbyts, obj.svc)
+	obj.error(yaml.Unmarshal(yamlbyts, obj.svc))
 	return obj
 }
 
@@ -126,6 +126,13 @@ func (obj *Service) SetPort(sp ServicePort) *Service {
 func (obj *Service) SetSessionAffinity(affinity ServiceAffinity) *Service {
 	obj.svc.Spec.SessionAffinity = affinity.ToK8s()
 	return obj
+}
+
+func (obj *Service) error(err error) {
+	if obj.err != nil {
+		return
+	}
+	obj.err = err
 }
 
 // verify check service necessary value, input the default field and input related data.

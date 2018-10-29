@@ -30,13 +30,13 @@ func (obj *Deployment) Finish() (dp *v1.Deployment, err error) {
 
 // JSONNew use json data create Deployment
 func (obj *Deployment) JSONNew(jsonbyts []byte) *Deployment {
-	obj.err = json.Unmarshal(jsonbyts, obj.dp)
+	obj.error(json.Unmarshal(jsonbyts, obj.dp))
 	return obj
 }
 
 // YAMLNew use yaml data create Deployment
 func (obj *Deployment) YAMLNew(yamlbyts []byte) *Deployment {
-	obj.err = yaml.Unmarshal(yamlbyts, obj.dp)
+	obj.error(yaml.Unmarshal(yamlbyts, obj.dp))
 	return obj
 }
 

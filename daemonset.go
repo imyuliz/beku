@@ -14,16 +14,14 @@ type DaemonSet struct {
 }
 
 // NewDS create DaemonSet(ds) and chain function call begin with this function.
-func (obj *DaemonSet) NewDS() *DaemonSet { return &DaemonSet{ds: &v1.DaemonSet{}} }
+func NewDS() *DaemonSet { return &DaemonSet{ds: &v1.DaemonSet{}} }
 
 // Finish Chain function call end with this function
 // return real DaemonSet(really DaemonSet is kubernetes resource object DaemonSet and error
 // In the function, it will check necessary parameters、input the default field。
 func (obj *DaemonSet) Finish() (*v1.DaemonSet, error) {
-	if obj.err != nil {
-		return nil, obj.err
-	}
-	return obj.ds, nil
+	obj.verify()
+	return obj.ds, obj.err
 }
 
 // SetName set DaemonSet(ds) name
@@ -70,7 +68,13 @@ func (obj *DaemonSet) SetSelector(selector map[string]string) *DaemonSet {
 // SetPodLabels set Pod Label and set DaemonSet Selector
 func (obj *DaemonSet) SetPodLabels(labels map[string]string) *DaemonSet {
 	obj.ds.Spec.Template.SetLabels(labels)
-	obj.SetPodLabels(labels)
+	if obj.ds.Spec.Selector == nil {
+		obj.ds.Spec.Selector = &metav1.LabelSelector{
+			MatchLabels: labels,
+		}
+		return obj
+	}
+	obj.ds.Spec.Selector.MatchLabels = labels
 	return obj
 }
 
@@ -244,6 +248,7 @@ func (obj *DaemonSet) verify() {
 	}
 	if len(obj.GetPodLabel()) < 1 {
 		obj.err = errors.New("Pod Labels is not allowed to be empty,you can call SetPodLabels input")
+		return
 	}
 	//check qos set,if err!=nil, check need auto set qos
 	presentQos, err := qosCheck(obj.ds.Annotations[qosKey], obj.ds.Spec.Template.Spec)
