@@ -1,8 +1,10 @@
 package beku
 
 import (
+	"encoding/json"
 	"errors"
 
+	"github.com/ghodss/yaml"
 	"k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,6 +24,18 @@ func NewDS() *DaemonSet { return &DaemonSet{ds: &v1.DaemonSet{}} }
 func (obj *DaemonSet) Finish() (*v1.DaemonSet, error) {
 	obj.verify()
 	return obj.ds, obj.err
+}
+
+// JSONNew use json data create DaemonSet
+func (obj *DaemonSet) JSONNew(jsonbyts []byte) *DaemonSet {
+	obj.error(json.Unmarshal(jsonbyts, obj.ds))
+	return obj
+}
+
+// YAMLNew use yaml data create DaemonSet
+func (obj *DaemonSet) YAMLNew(yamlbyts []byte) *DaemonSet {
+	obj.error(yaml.Unmarshal(yamlbyts, obj.ds))
+	return obj
 }
 
 // Replace replace ds by Kubernetes resource object
