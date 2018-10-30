@@ -37,6 +37,8 @@ beku的使用场景是对接Kubernetes的客户端(eg:client-go), 当然, 也可
 ### 示例
 
 如何快速创建一个Service(svc)?
+
+
 正如你所见:
 
 ```
