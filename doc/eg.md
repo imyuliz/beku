@@ -1,3 +1,27 @@
+# beku
+
+[![GoDoc](https://godoc.org/github.com/imroc/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yulibaozi/beku)](https://goreportcard.com/badge/github.com/yulibaozi/beku)
+
+An extremely user-friendly Kubernetes API resources building library, extremely easy without any extra intelligence. 
+
+### Installation
+
+```
+go get -u github.com/yulibaozi/beku
+```
+
+### Features
+
+- Extremely simple JSON & YAML input / output
+- Required Kubernetes API resources fields automatically confirming
+- Interrelated Kubernetes API resources announcement which is so user-friendly 
+- Rigorous QOS setup
+- Precise fileds auto-fillment
+- Graceful chain methods and invocation
+
+### Introduction
+
 How to use beku?
 ---
 
@@ -125,3 +149,4 @@ spec:
         resources: {}
 status: {}
 ```
+
