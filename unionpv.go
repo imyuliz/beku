@@ -78,6 +78,13 @@ func (un *UnionPV) SetCapacity(capMaps map[ResourceName]string) *UnionPV {
 	return un
 }
 
+// SetAnnotations get  PersistentVolume and PersistentVolumeClaim annotations
+func (un *UnionPV) SetAnnotations(annotations map[string]string) *UnionPV {
+	un.pv.SetAnnotations(annotations)
+	un.pvc.SetAnnotations(annotations)
+	return un
+}
+
 // SetVolumeMode set pvc volume mode Filesystem or Block
 func (un *UnionPV) SetVolumeMode(volumeMode PersistentVolumeMode) *UnionPV {
 	un.pvc.SetVolumeMode(volumeMode)
