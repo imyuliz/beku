@@ -41,7 +41,7 @@ beku的使用场景是对接Kubernetes的客户端(eg:client-go), 当然, 也可
 
 正如你所见:
 
-```
+```go
 func howToNewSvc() {
 	svc, err := beku.NewSvc().SetNamespaceAndName("roc", "mysql-svc").
 		SetSelector(map[string]string{"app": "mysql"}).SetServiceType(beku.ServiceTypeNodePort).
@@ -56,8 +56,10 @@ func howToNewSvc() {
 	}
 }
 ```
+
 ToYAML
-```
+
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -75,8 +77,10 @@ spec:
 status:
   loadBalancer: {}
 ```
+
 ToJSON
-```
+
+```json
 {
     "kind":"Service",
     "apiVersion":"v1",

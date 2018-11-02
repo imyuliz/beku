@@ -7,7 +7,7 @@ If you want to quicky create service, only input necessary Fields.
 
 As shown in the code:
 
-```
+```go
 func howToNewSvc() {
 	svc, err := beku.NewSvc().SetNamespaceAndName("roc", "mysql-svc").
 		SetSelector(map[string]string{"app": "mysql"}).SetServiceType(beku.ServiceTypeNodePort).
@@ -31,7 +31,7 @@ If you want to quicky create sts, only input necessary Fields.
 
 As shown in the code:
 
-```
+```go
 func howToNewSts() {
 	sts, err := beku.NewSts().SetNamespaceAndName("yulibaozi", "mysql").SetSelector(map[string]string{"name": "mysql"}).SetContainer("first", "mysql", 3306).Finish()
 	if err != nil {
@@ -52,7 +52,7 @@ If you want to quicky create Deployment, only input necessary Fields.
 
 As shown in the code:
 
-```
+```go
 func howToNewDeployment() {
 	dep, err := beku.NewDeployment().
 		SetName("yulibaozi").SetLabels(map[string]string{"name": "yulibaozi"}).
@@ -73,7 +73,7 @@ func howToNewDeployment() {
 If you want to quicky create Secret, only input necessary Fields.
 
 As shown in the code:
-```
+```go
 func howToNewSecret() {
 	sec, err := beku.NewSecret().SetDataString(map[string]string{"key": "beku is very good!"}).SetNamespaceAndName("yulibaozi", "beku").Finish()
 	if err != nil {
@@ -92,7 +92,7 @@ func howToNewSecret() {
 If you want to quicky create cm, only input necessary Fields.
 
 As shown in the code:
-```
+```go
 func howToNewCM() {
 	sec, err := beku.NewCM().SetNamespaceAndName("yulibaozi", "beku").SetData(map[string]string{"key": "beku is very good!"}).Finish()
 	if err != nil {
@@ -112,7 +112,7 @@ func howToNewCM() {
 If you want to quicky create ds, only input necessary Fields.
 
 As shown in the code:
-```
+```go
 func howToNewDS() {
 	ds, err := beku.NewDS().SetNamespaceAndName("roc", "api").SetContainer("first", "go-sdk", 8081).
 		SetPodLabels(map[string]string{"name": "go-sdk"}).SetMinReadySeconds(10).
@@ -134,7 +134,7 @@ func howToNewDS() {
 If you want to quicky create UnionPV, only input necessary Fields.
 
 As shown in the code:
-```
+```go
 func howToNewUnionPV() {
 	pv, pvc, err := beku.NewUnionPV().SetNamespaceAndName("yulibaozi", "mysql-persistent").
 		SetAccessMode(beku.ReadOnlyMany).SetCapacity(map[beku.ResourceName]string{beku.ResourceMemory: "5Gi"}).
@@ -163,7 +163,7 @@ func howToNewUnionPV() {
 If you want to quicky create pv, only input necessary Fields.
 
 As shown in the code:
-```
+```go
 func howToNewPV() {
 	pv, err := beku.NewPV().SetName("redis-pv").SetAccessMode(beku.ReadWriteMany).SetNFS(&beku.NFSVolumeSource{Server: "192.168.0.165:2132", Path: "/data"}).
 		SetCapacity(map[beku.ResourceName]string{beku.ResourceEphemeralStorage: "50G"}).Finish()
@@ -183,7 +183,7 @@ func howToNewPV() {
 If you want to quicky create pvc, only input necessary Fields.
 
 As shown in the code:
-```
+```go
 func howToNewPVC() {
 	pvc, err := beku.NewPVC().SetNamespaceAndName("yulibaozi", "redis").SetAccessMode(beku.ReadOnlyMany).
 		SetResourceRequests(map[beku.ResourceName]string{beku.ResourceEphemeralStorage: "5Gi"}).

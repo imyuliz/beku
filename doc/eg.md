@@ -41,7 +41,7 @@ How to create a Service(svc) in few seconds?
 
 As you will see:
 
-```
+```go
 func howToNewSvc() {
 	svc, err := beku.NewSvc().SetNamespaceAndName("roc", "mysql-svc").
 		SetSelector(map[string]string{"app": "mysql"}).SetServiceType(beku.ServiceTypeNodePort).
@@ -57,8 +57,10 @@ func howToNewSvc() {
 
 }
 ```
+
 ToYAML
-```
+
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -76,8 +78,10 @@ spec:
 status:
   loadBalancer: {}
 ```
+
 ToJSON
-```
+
+```json
 {
     "kind":"Service",
     "apiVersion":"v1",
