@@ -51,7 +51,34 @@ func DeploymentToSvc(dp *appsv1.Deployment, sty ServiceType) (*v1.Service, error
 	}
 	return NewSvc().SetNamespaceAndName(dp.GetNamespace(), dp.GetName()).
 		SetSelector(dp.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
+}
 
+// StatefulSetToSvc  Use the StatefulSet to generate the associated SVC
+func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType) (*v1.Service, error) {
+	var ports []ServicePort
+	for _, data := range sts.Spec.Template.Spec.Containers {
+		ports = append(ports, ServicePort{
+			Name:     data.Name,
+			Protocol: Protocol(data.Ports[0].Protocol),
+			Port:     data.Ports[0].ContainerPort,
+		})
+	}
+	return NewSvc().SetNamespaceAndName(sts.GetNamespace(), sts.GetName()).
+		SetSelector(sts.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
+}
+
+// DaemonSetToSvc  Use the Set to generate the associated SVC
+func DaemonSetToSvc(ds *appsv1.DaemonSet, sty ServiceType) (*v1.Service, error) {
+	var ports []ServicePort
+	for _, data := range ds.Spec.Template.Spec.Containers {
+		ports = append(ports, ServicePort{
+			Name:     data.Name,
+			Protocol: Protocol(data.Ports[0].Protocol),
+			Port:     data.Ports[0].ContainerPort,
+		})
+	}
+	return NewSvc().SetNamespaceAndName(ds.GetNamespace(), ds.GetName()).
+		SetSelector(ds.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
 }
 
 // Base64Encode base64 encode
