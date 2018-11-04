@@ -11,6 +11,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
+func setImagePullSecrets(podTemp *v1.PodTemplateSpec, secretName string) {
+	if len(podTemp.Spec.ImagePullSecrets) <= 0 {
+		podTemp.Spec.ImagePullSecrets = []v1.LocalObjectReference{v1.LocalObjectReference{Name: secretName}}
+		return
+	}
+	podTemp.Spec.ImagePullSecrets = append(podTemp.Spec.ImagePullSecrets, v1.LocalObjectReference{Name: secretName})
+}
+
 // setContainer set container
 func setContainer(podTemp *v1.PodTemplateSpec, name, image string, containerPort int32) error {
 	// This must be a valid port number, 0 < x < 65536.

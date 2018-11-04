@@ -114,7 +114,6 @@ func (obj *StatefulSet) GetPodLabel() map[string]string { return obj.sts.Spec.Te
 
 // SetPodLabels set Pod labels and set StatefulSet(sts) selector
 func (obj *StatefulSet) SetPodLabels(labels map[string]string) *StatefulSet {
-	obj.sts.Spec.Template.SetLabels(labels)
 	obj.SetSelector(labels)
 	return obj
 }
@@ -284,6 +283,12 @@ func (obj *StatefulSet) SetPodQos(qosClass string, autoSet ...bool) *StatefulSet
 	return obj
 }
 
+// SetImagePullSecrets set pod pull secret
+func (obj *StatefulSet) SetImagePullSecrets(secretName string) *StatefulSet {
+	setImagePullSecrets(&obj.sts.Spec.Template, secretName)
+	return obj
+}
+
 // verify check service necessary value, input the default field and input related data.
 func (obj *StatefulSet) verify() {
 	if obj.err != nil {
@@ -294,7 +299,7 @@ func (obj *StatefulSet) verify() {
 		return
 	}
 	if obj.sts.Spec.Selector == nil {
-		obj.err = errors.New("StatefulSet.Spec.Selector is not allowed to be empty")
+		obj.err = errors.New("StatefulSet.Spec.Selector.MatchLabels is not allowed to be empty")
 		return
 	}
 	if len(obj.sts.Spec.Template.Spec.Containers) < 1 {

@@ -20,7 +20,7 @@ func NewDS() *DaemonSet { return &DaemonSet{ds: &v1.DaemonSet{}} }
 
 // Finish Chain function call end with this function
 // return real DaemonSet(really DaemonSet is kubernetes resource object DaemonSet and error
-// In the function, it will check necessary parameters、input the default field。
+// In the function, it will check necessary parameters、input the default field
 func (obj *DaemonSet) Finish() (*v1.DaemonSet, error) {
 	obj.verify()
 	return obj.ds, obj.err
@@ -66,10 +66,9 @@ func (obj *DaemonSet) SetNamespaceAndName(namespace, name string) *DaemonSet {
 	return obj
 }
 
-// SetLabels set DaemonSet(ds) Labels,set Pod Labels and set DaemonSet selector.
+// SetLabels set DaemonSet(ds) Labels,set Pod Labels.
 func (obj *DaemonSet) SetLabels(labels map[string]string) *DaemonSet {
 	obj.ds.SetLabels(labels)
-	obj.SetPodLabels(labels)
 	return obj
 }
 
@@ -89,14 +88,7 @@ func (obj *DaemonSet) SetSelector(selector map[string]string) *DaemonSet {
 
 // SetPodLabels set Pod Label and set DaemonSet Selector
 func (obj *DaemonSet) SetPodLabels(labels map[string]string) *DaemonSet {
-	obj.ds.Spec.Template.SetLabels(labels)
-	if obj.ds.Spec.Selector == nil {
-		obj.ds.Spec.Selector = &metav1.LabelSelector{
-			MatchLabels: labels,
-		}
-		return obj
-	}
-	obj.ds.Spec.Selector.MatchLabels = labels
+	obj.SetSelector(labels)
 	return obj
 }
 
@@ -240,6 +232,12 @@ func (obj *DaemonSet) SetHistoryLimit(limit int32) *DaemonSet {
 		limit = 10
 	}
 	obj.ds.Spec.RevisionHistoryLimit = &limit
+	return obj
+}
+
+// SetImagePullSecrets set pod pull secret
+func (obj *DaemonSet) SetImagePullSecrets(secretName string) *DaemonSet {
+	setImagePullSecrets(&obj.ds.Spec.Template, secretName)
 	return obj
 }
 

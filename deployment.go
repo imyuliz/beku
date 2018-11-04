@@ -21,7 +21,7 @@ func NewDeployment() *Deployment { return &Deployment{dp: &v1.Deployment{}} }
 
 // Finish Chain function call end with this function
 // return Kubernetes resource object Deployment and error.
-// In the function, it will check necessary parameters、input the default field。
+// In the function, it will check necessary parametersainput the default field
 func (obj *Deployment) Finish() (dp *v1.Deployment, err error) {
 	obj.verify()
 	dp, err = obj.dp, obj.err
@@ -68,10 +68,9 @@ func (obj *Deployment) SetNamespaceAndName(namespace, name string) *Deployment {
 	return obj
 }
 
-// SetLabels set Deployment labels and set Pod Labels
+// SetLabels set Deployment labels
 func (obj *Deployment) SetLabels(labels map[string]string) *Deployment {
 	obj.dp.SetLabels(labels)
-	obj.dp.Spec.Template.SetLabels(labels)
 	return obj
 }
 
@@ -89,10 +88,10 @@ func (obj *Deployment) SetSelector(labels map[string]string) *Deployment {
 		obj.dp.Spec.Selector = &metav1.LabelSelector{
 			MatchLabels: labels,
 		}
-		obj.SetLabels(labels)
+		obj.dp.Spec.Template.SetLabels(labels)
 		return obj
 	}
-	obj.SetLabels(labels)
+	obj.dp.Spec.Template.SetLabels(labels)
 	obj.dp.Spec.Selector.MatchLabels = labels
 	return obj
 }
@@ -139,7 +138,7 @@ func (obj *Deployment) SetHistoryLimit(limit int32) *Deployment {
 // path: http request URL,eg: /api/v1/posts/1
 // initDelaySec: how long time after the first start of the program the probe is executed for the first time.(sec)
 // timeoutSec: http request timeout seconds,defaults to 1 second. Minimum value is 1.
-// periodSec: how often does the probe??defaults to 1 second. Minimum value is 1,Except for the first time?
+// periodSec: how often does the probe? defaults to 1 second. Minimum value is 1,Except for the first time?
 // headers: headers[0] is HTTP Header, do not fill if you do not need to set
 // on the other hand, only **first container** will be set livenessProbe
 func (obj *Deployment) SetHTTPLiveness(port int, path string, initDelaySec, timeoutSec, periodSec int32, headers ...map[string]string) *Deployment {
@@ -246,7 +245,13 @@ func (obj *Deployment) SetPodQos(qosClass string, autoSet ...bool) *Deployment {
 // SetPodLabels set Pod labels
 // when call SetLabels(),you can not use this function.
 func (obj *Deployment) SetPodLabels(labels map[string]string) *Deployment {
-	obj.dp.Spec.Template.SetLabels(labels)
+	obj.SetSelector(labels)
+	return obj
+}
+
+// SetImagePullSecrets set pod pull secret
+func (obj *Deployment) SetImagePullSecrets(secretName string) *Deployment {
+	setImagePullSecrets(&obj.dp.Spec.Template, secretName)
 	return obj
 }
 
@@ -315,10 +320,6 @@ func (obj *Deployment) verify() {
 	}
 	if !verifyString(obj.dp.GetName()) {
 		obj.err = errors.New("Deployment name is not allowed to be empty")
-		return
-	}
-	if len(obj.dp.GetLabels()) < 1 {
-		obj.err = errors.New("Deployment Labels is not allowed to be empty")
 		return
 	}
 	if len(obj.dp.Spec.Template.GetLabels()) < 1 {

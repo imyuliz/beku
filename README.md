@@ -118,6 +118,7 @@ ToJSON
 
 资源对象 | 简称|  版本
 ---|---|---
+namespace   | ns| core/v1
 service   | svc| core/v1
 deployment | - | apps/v1
 statefulset | sts | apps/v1

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	apiresource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -36,6 +37,21 @@ func JSONToYAML(jbyts []byte) (ybyts []byte, err error) {
 func YAMLToJSON(ybyts []byte) (jbyts []byte, err error) {
 	jbyts, err = yaml.YAMLToJSON(ybyts)
 	return
+}
+
+// DeploymentToSvc  Use the Deployment to generate the associated SVC
+func DeploymentToSvc(dp *appsv1.Deployment, sty ServiceType) (*v1.Service, error) {
+	var ports []ServicePort
+	for _, data := range dp.Spec.Template.Spec.Containers {
+		ports = append(ports, ServicePort{
+			Name:     data.Name,
+			Protocol: Protocol(data.Ports[0].Protocol),
+			Port:     data.Ports[0].ContainerPort,
+		})
+	}
+	return NewSvc().SetNamespaceAndName(dp.GetNamespace(), dp.GetName()).
+		SetSelector(dp.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
+
 }
 
 // Base64Encode base64 encode
