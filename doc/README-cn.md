@@ -19,6 +19,13 @@ go get -u github.com/yulibaozi/beku
 - 准确的字段自动填充
 - 写意的链式调用
 
+### 文档
+
+- [中文](https://github.com/yulibaozi/beku/blob/master/doc/README-cn.md)
+- [更多示例](https://github.com/yulibaozi/beku/blob/master/doc/example.md)
+- [Youtube](xclearx)
+- [腾讯视频](http://v.qq.com/x/page/d0783vtazs9.html)
+
 ### 概要
 
 beku的诞生来源于对现实工作上的不满, 资源对象配置繁琐, 本身大量的字段已经让人难以忍受, 何况层级又带来了额外的心智负担, 还有多个资源对象重复劳动带来的低效能工作, 这三者的纠缠催生了beku, 这实在令人欢欣鼓舞。

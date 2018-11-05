@@ -20,6 +20,14 @@ go get -u github.com/yulibaozi/beku
 - Precise fileds auto-fillment
 - Graceful chain methods and invocation
 
+
+### Document
+
+- [中文](https://github.com/yulibaozi/beku/blob/master/doc/README-cn.md)
+- [More examples](https://github.com/yulibaozi/beku/blob/master/doc/example.md)
+- [Youtube](xclearx)
+- [Tencent Video](http://v.qq.com/x/page/d0783vtazs9.html)
+
 ### Introduction
 
 Due to the complexities of Kubernetes API resources configuration, miscellaneous fields, diverse hierarchies, rehandling over and over again, Beku was inspirationally born. 
