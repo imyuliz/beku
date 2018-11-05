@@ -129,6 +129,7 @@ More examples: [Example.md](https://github.com/yulibaozi/beku/blob/master/doc/ex
 
 Kubernetes API resources | Abbreviation | Version 
 ---|---|---|
+namespace   | ns| core/v1
 service   | svc| core/v1
 deployment | - | apps/v1
 statefulset | sts | apps/v1
