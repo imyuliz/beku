@@ -128,4 +128,30 @@ persistentVolume | pv | core/v1
 daemonSet | ds | apps/v1
 configMap | cm | core/v1
 
+### Beku Implementation Strategy
 
+1. Only one API resource version will be implemented **even it has multi versions**. Since stability instead of diversity is the first place concern, which may lead some lags to the latest version. But it won't be a problem. On the other hand, below are priorities when choosing API resource version:
+	* core/v1 
+	* apps/v1
+	...
+
+2. When implementing Kubernetes API resource objects which lack of stable version, Alpha, Beta versions will not be implemented. Because less stable versions have more probablities to be changed. 
+3. Kubernetes API resource versions references:
+[Kubernetes API Introduction](http://kubernetes.kansea.com/docs/api/)
+
+### Beku Conception
+
+**In the past**, I found that it's pretty tedious to write Kubernetes API reosurces configuration, besides the complexity of configurable fields, there still need extra intelligence like:
+ * It's a problem that configurable fields which is required or optional.
+ * Kubernetes API resources have diverse hierarchies, it's a problem the localtions of configurable fields in json/yaml file.
+ * Indentation need to taken in to consideration when writing yaml file.
+ * It's a problem that those issues above happen over and over again. 
+
+There are drawbacks in **current** implementations, e.g. we implemented the general fill of some fields in one Kubernetes API resource instead of the complex way, this may lead multi advanced fill strategies not available. You could propose a PR or issue for disscution. On the other hand, there are still some capabilities need to be completed, we could work together.
+
+**In the future**, expected to eliminate the 3 drawbacks above and make a progress to the targets below:
+- [ ] Invoker provide required fields, non-need fields don't fill.
+- [x] Invoker provide non-hierachy fields, extra intelliengcy burden exliminated.
+- [x] Invoker provide requreid fields to make complete json/yaml configuration.
+- [x] Invoker provide single field, other related fields will be filled automatically.
+- [x] Invoker provide incomplete fields, Beku will return lacked fields helping invokers to accomplish fill. 
