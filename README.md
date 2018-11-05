@@ -25,7 +25,7 @@ go get -u github.com/yulibaozi/beku
 
 - [中文](https://github.com/yulibaozi/beku/blob/master/doc/README-cn.md)
 - [More examples](https://github.com/yulibaozi/beku/blob/master/test/example_test.go)
-- [Youtube:Deploy your application on Kubernetes with 3 LoC using Beku](https://youtu.be/o15EU09z5tI)
+- [Youtube:Deploy your application on Kubernetes with 3 LoC using Beku](https://youtu.be/4CaARsch9ms)
 - [Tencent Video:Beku--3行代码发布你的应用到Kubernetes](http://v.qq.com/x/page/d0783vtazs9.html)
 
 ### Introduction
