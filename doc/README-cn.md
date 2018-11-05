@@ -12,6 +12,8 @@ go get -u github.com/yulibaozi/beku
 
 ### 特性
 
+- 自动发布资源对象到Kubernetes
+- 灵活的自定义开发
 - 极简的JSON和YAML输入/输出
 - 自动判断资源对象的必要字段
 - 人性化的资源对象关联发布

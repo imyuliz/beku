@@ -13,6 +13,8 @@ go get -u github.com/yulibaozi/beku
 
 ### Features
 
+- Auto release resource object on Kubernetes
+- Flexible custom development
 - Extremely simple JSON & YAML input / output
 - Required Kubernetes API resources fields automatically confirming
 - Interrelated Kubernetes API resources announcement which is so user-friendly 
