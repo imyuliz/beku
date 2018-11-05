@@ -8,6 +8,28 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+func Example_beku_autoRelease() {
+	err := beku.RegisterK8sClient("http://192.168.0.183", "", "", "")
+	if err != nil {
+		panic(err)
+	}
+	dp, err := beku.NewDeployment().SetNamespaceAndName("roc", "http").
+		SetPodLabels(map[string]string{"app": "http"}).SetContainer("http", "wucong60/kube-node-demo1:v1", 8081).Release()
+	if err != nil {
+		panic(err)
+	}
+	svc, err := beku.DeploymentToSvc(dp, beku.ServiceTypeNodePort, true)
+	if err != nil {
+		panic(err)
+	}
+	byts, err := beku.ToYAML(svc)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("\n%s", string(byts))
+	fmt.Println("over!")
+
+}
 func Example_beku_PushApp() {
 	client := GetK8sClient()
 	// cretate Namespace
