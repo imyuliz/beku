@@ -136,6 +136,19 @@ func (obj *Service) SetSessionAffinity(affinity ServiceAffinity) *Service {
 	return obj
 }
 
+// Release release Service on Kubernetes
+func (obj *Service) Release() (*v1.Service, error) {
+	svc, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.CoreV1().Services(svc.GetNamespace()).Create(svc)
+}
+
 func (obj *Service) error(err error) {
 	if obj.err != nil {
 		return

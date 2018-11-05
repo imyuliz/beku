@@ -289,6 +289,19 @@ func (obj *StatefulSet) SetImagePullSecrets(secretName string) *StatefulSet {
 	return obj
 }
 
+// Release release StatefulSet on Kubernetes
+func (obj *StatefulSet) Release() (*v1.StatefulSet, error) {
+	sts, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.AppsV1().StatefulSets(sts.GetNamespace()).Create(sts)
+}
+
 // verify check service necessary value, input the default field and input related data.
 func (obj *StatefulSet) verify() {
 	if obj.err != nil {

@@ -76,6 +76,19 @@ func (obj *ConfigMap) SetData(data map[string]string) *ConfigMap {
 	return obj
 }
 
+// Release release ConfigMap on Kubernetes
+func (obj *ConfigMap) Release() (*v1.ConfigMap, error) {
+	cm, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.CoreV1().ConfigMaps(cm.GetNamespace()).Create(cm)
+}
+
 func (obj *ConfigMap) error(err error) {
 	if obj.err != nil {
 		return

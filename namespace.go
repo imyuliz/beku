@@ -29,6 +29,19 @@ func (obj *Namespace) SetName(name string) *Namespace {
 	return obj
 }
 
+// Release release Namespace on Kubernetes
+func (obj *Namespace) Release() (*v1.Namespace, error) {
+	ns, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.CoreV1().Namespaces().Create(ns)
+}
+
 func (obj *Namespace) verify() {
 	if obj.ns.GetName() == "" {
 		obj.err = errors.New("Namespace.Name is not allowed to be empty")

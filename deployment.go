@@ -313,6 +313,19 @@ func (obj *Deployment) SetEnvs(envMap map[string]string) *Deployment {
 	return obj
 }
 
+// Release release Deployment on Kubernetes
+func (obj *Deployment) Release() (*v1.Deployment, error) {
+	dp, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.AppsV1().Deployments(dp.GetNamespace()).Create(dp)
+}
+
 // verify check service necessary value, input the default field and input related data.
 func (obj *Deployment) verify() {
 	if obj.err != nil {

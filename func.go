@@ -12,7 +12,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	apiresource "k8s.io/apimachinery/pkg/api/resource"
+
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // ToYAML struct translate into yaml
@@ -40,7 +43,8 @@ func YAMLToJSON(ybyts []byte) (jbyts []byte, err error) {
 }
 
 // DeploymentToSvc  Use the Deployment to generate the associated SVC
-func DeploymentToSvc(dp *appsv1.Deployment, sty ServiceType) (*v1.Service, error) {
+// autoRelease[0] if true,beku will auto Release Service On Kubernetes,default can't Release Service On Kubernetes
+func DeploymentToSvc(dp *appsv1.Deployment, sty ServiceType, autoRelease ...bool) (*v1.Service, error) {
 	var ports []ServicePort
 	for _, data := range dp.Spec.Template.Spec.Containers {
 		ports = append(ports, ServicePort{
@@ -49,12 +53,16 @@ func DeploymentToSvc(dp *appsv1.Deployment, sty ServiceType) (*v1.Service, error
 			Port:     data.Ports[0].ContainerPort,
 		})
 	}
-	return NewSvc().SetNamespaceAndName(dp.GetNamespace(), dp.GetName()).
-		SetSelector(dp.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
+	svc := NewSvc().SetNamespaceAndName(dp.GetNamespace(), dp.GetName()).SetSelector(dp.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty)
+	if len(autoRelease) > 0 && autoRelease[0] == true {
+		return svc.Release()
+	}
+	return svc.Finish()
 }
 
 // StatefulSetToSvc  Use the StatefulSet to generate the associated SVC
-func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType) (*v1.Service, error) {
+// autoRelease[0] if true,beku will auto Release Service On Kubernetes,default can't Release Service On Kubernetes
+func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType, autoRelease ...bool) (*v1.Service, error) {
 	var ports []ServicePort
 	for _, data := range sts.Spec.Template.Spec.Containers {
 		ports = append(ports, ServicePort{
@@ -63,12 +71,16 @@ func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType) (*v1.Service, er
 			Port:     data.Ports[0].ContainerPort,
 		})
 	}
-	return NewSvc().SetNamespaceAndName(sts.GetNamespace(), sts.GetName()).
-		SetSelector(sts.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
+	svc := NewSvc().SetNamespaceAndName(sts.GetNamespace(), sts.GetName()).SetSelector(sts.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty)
+	if len(autoRelease) > 0 && autoRelease[0] == true {
+		return svc.Release()
+	}
+	return svc.Finish()
 }
 
 // DaemonSetToSvc  Use the Set to generate the associated SVC
-func DaemonSetToSvc(ds *appsv1.DaemonSet, sty ServiceType) (*v1.Service, error) {
+// autoRelease[0] if true,beku will auto Release Service On Kubernetes,default can't Release Service On Kubernetes
+func DaemonSetToSvc(ds *appsv1.DaemonSet, sty ServiceType, autoRelease ...bool) (*v1.Service, error) {
 	var ports []ServicePort
 	for _, data := range ds.Spec.Template.Spec.Containers {
 		ports = append(ports, ServicePort{
@@ -77,8 +89,11 @@ func DaemonSetToSvc(ds *appsv1.DaemonSet, sty ServiceType) (*v1.Service, error) 
 			Port:     data.Ports[0].ContainerPort,
 		})
 	}
-	return NewSvc().SetNamespaceAndName(ds.GetNamespace(), ds.GetName()).
-		SetSelector(ds.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty).Finish()
+	svc := NewSvc().SetNamespaceAndName(ds.GetNamespace(), ds.GetName()).SetSelector(ds.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty)
+	if len(autoRelease) > 0 && autoRelease[0] == true {
+		return svc.Release()
+	}
+	return svc.Finish()
 }
 
 // Base64Encode base64 encode
@@ -206,4 +221,70 @@ func mapToEnvs(envMap map[string]string) ([]v1.EnvVar, error) {
 		return nil, fmt.Errorf("SetEnvs error, envs is not allowed to be empty")
 	}
 	return envs, nil
+}
+
+// Client k8s client
+type client struct {
+	Host     string
+	CAData   []byte
+	CertData []byte
+	KeyData  []byte
+}
+
+var defaultClient = new(client)
+
+func getClientConfig() *client {
+	return defaultClient
+}
+
+// GetKubeClient get Kubernetes apiServer
+func GetKubeClient() (*kubernetes.Clientset, error) {
+	config := getClientConfig()
+	if config.Host == "" {
+		return nil, errors.New("get kubernetes apiserver error,Because Host is empty,you can call function RegisterK8sClient() register")
+	}
+	if ViaTLS(config.CAData, config.CertData, config.KeyData) {
+		return getTLSKubeClient(config.Host, config.CAData, config.CertData, config.KeyData)
+	}
+	return getKubeClient(config.Host)
+}
+
+// ViaTLS  verify Kubernetes apiServer cert
+func ViaTLS(ca, cert, key []byte) bool {
+	return len(ca) > 1 && len(cert) > 1 && len(key) > 1
+}
+
+func getTLSKubeClient(host string, ca, cert, key []byte) (*kubernetes.Clientset, error) {
+	return kubernetes.NewForConfig(&rest.Config{
+		Host: host,
+		TLSClientConfig: rest.TLSClientConfig{
+			CAData:   ca,
+			CertData: cert,
+			KeyData:  key,
+		},
+	})
+
+}
+
+func getKubeClient(host string) (*kubernetes.Clientset, error) {
+	return kubernetes.NewForConfig(&rest.Config{
+		Host: host,
+	})
+}
+
+// RegisterK8sClient register k8s apiServer Client on Beku
+// If the certificate is not required, ca,cert,key field is ""
+func RegisterK8sClient(host, ca, cert, key string) error {
+	if strings.TrimSpace(host) == "" {
+		return errors.New("RegisterK8sClient failed,host is not allowed to be empty")
+	}
+	if ca != "" && cert != "" && key != "" {
+		defaultClient.Host = host
+		defaultClient.CAData = []byte(ca)
+		defaultClient.CertData = []byte(cert)
+		defaultClient.KeyData = []byte(key)
+		return nil
+	}
+	defaultClient.Host = host
+	return nil
 }

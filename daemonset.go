@@ -241,6 +241,19 @@ func (obj *DaemonSet) SetImagePullSecrets(secretName string) *DaemonSet {
 	return obj
 }
 
+// Release release DaemonSet on Kubernetes
+func (obj *DaemonSet) Release() (*v1.DaemonSet, error) {
+	ds, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.AppsV1().DaemonSets(ds.GetNamespace()).Create(ds)
+}
+
 // GetPodLabel get pod labels
 func (obj *DaemonSet) GetPodLabel() map[string]string {
 	return obj.ds.Spec.Template.GetLabels()

@@ -90,6 +90,19 @@ func (obj *Secret) SetType(secType SecretType) *Secret {
 	return obj
 }
 
+// Release release Secret on Kubernetes
+func (obj *Secret) Release() (*v1.Secret, error) {
+	sec, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.CoreV1().Secrets(sec.GetNamespace()).Create(sec)
+}
+
 func (obj *Secret) error(err error) {
 	if obj.err != nil {
 		return

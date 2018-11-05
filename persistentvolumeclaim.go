@@ -198,6 +198,19 @@ func (obj *PersistentVolumeClaim) SetMatchExpressions(ents []LabelSelectorRequir
 	return obj
 }
 
+// Release release PersistentVolumeClaim on Kubernetes
+func (obj *PersistentVolumeClaim) Release() (*v1.PersistentVolumeClaim, error) {
+	pvc, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.CoreV1().PersistentVolumeClaims(pvc.GetNamespace()).Create(pvc)
+}
+
 func (obj *PersistentVolumeClaim) error(err error) {
 	if obj.err != nil {
 		return

@@ -182,6 +182,19 @@ func (obj *PersistentVolume) SetRBD(rbd *RBDPersistentVolumeSource) *PersistentV
 	return obj
 }
 
+// Release release PersistentVolume on Kubernetes
+func (obj *PersistentVolume) Release() (*v1.PersistentVolume, error) {
+	pv, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.CoreV1().PersistentVolumes().Create(pv)
+}
+
 func (obj *PersistentVolume) error(err error) {
 	if obj.err != nil {
 		return

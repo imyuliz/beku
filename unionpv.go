@@ -111,6 +111,24 @@ func (un *UnionPV) SetRBD(rbd *RBDPersistentVolumeSource) *UnionPV {
 	return un
 }
 
+// Release release UnionPV on Kubernetes
+func (un *UnionPV) Release() (pv *v1.PersistentVolume, pvc *v1.PersistentVolumeClaim, err error) {
+	pv, pvc, err = un.Finish()
+	if err != nil {
+		return
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return
+	}
+	pv, err = client.CoreV1().PersistentVolumes().Create(pv)
+	if err != nil {
+		return
+	}
+	pvc, err = client.CoreV1().PersistentVolumeClaims(pvc.GetNamespace()).Create(pvc)
+	return
+}
+
 // verify check UnionPV necessary value, input the default field and input related data.
 func (un *UnionPV) verify() {
 	if un.err != nil {
