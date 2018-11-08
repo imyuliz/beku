@@ -35,7 +35,8 @@ go get -u github.com/yulibaozi/beku
 Due to the complexities of Kubernetes API resources configuration, miscellaneous fields, diverse hierarchies, rehandling over and over again, Beku was inspirationally born. 
 
 The scenario of Beku is to matching Kubernetes Client-go, and providing json / yaml file for CLI creation. It's very appreciative and helpful that Beku has use Kubernetes codes for reference. 
-
+###  caas-one
+    [](https://github.com/yulibaozi/beku/blob/master/doc/caas-one.jpeg)
 ### Beku-style Usage
 
 1. Chain methods starts with `NewXXX()` and end up with `Finish()`, then we could get whole Kubernetes API resource configuration.
