@@ -37,7 +37,8 @@ Due to the complexities of Kubernetes API resources configuration, miscellaneous
 The scenario of Beku is to matching Kubernetes Client-go, and providing json / yaml file for CLI creation. It's very appreciative and helpful that Beku has use Kubernetes codes for reference. 
 ###  caas-one
 
-![caas-one](https://github.com/yulibaozi/beku/blob/master/images/caas-one.jpeg)
+<div align=center><img width="150" height="150" src="https://github.com/yulibaozi/beku/blob/master/images/caas-one.jpeg"/></div>
+
 
 ### Beku-style Usage
 
