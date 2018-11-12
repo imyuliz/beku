@@ -136,6 +136,12 @@ func (obj *Service) SetSessionAffinity(affinity ServiceAffinity) *Service {
 	return obj
 }
 
+// Headless service headless
+func (obj *Service) Headless() *Service {
+	obj.svc.Spec.ClusterIP = "None"
+	return obj
+}
+
 // Release release Service on Kubernetes
 func (obj *Service) Release() (*v1.Service, error) {
 	svc, err := obj.Finish()

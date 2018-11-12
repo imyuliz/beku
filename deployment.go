@@ -205,6 +205,9 @@ func (obj *Deployment) SetTCPReadness(host string, port int, initDelaySec, timeo
 // SetMatchExpressions set Deployment match expressions
 // the field is used to set complicated Label.
 func (obj *Deployment) SetMatchExpressions(ents []LabelSelectorRequirement) *Deployment {
+	if len(ents) <= 0 {
+		return obj
+	}
 	requirements := make([]metav1.LabelSelectorRequirement, 0)
 	for index := range ents {
 		requirements = append(requirements, metav1.LabelSelectorRequirement{

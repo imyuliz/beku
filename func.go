@@ -62,7 +62,7 @@ func DeploymentToSvc(dp *appsv1.Deployment, sty ServiceType, autoRelease ...bool
 
 // StatefulSetToSvc  Use the StatefulSet to generate the associated SVC
 // autoRelease[0] if true,beku will auto Release Service On Kubernetes,default can't Release Service On Kubernetes
-func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType, autoRelease ...bool) (*v1.Service, error) {
+func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType, isHeadless bool, autoRelease ...bool) (*v1.Service, error) {
 	var ports []ServicePort
 	for _, data := range sts.Spec.Template.Spec.Containers {
 		ports = append(ports, ServicePort{
@@ -71,7 +71,12 @@ func StatefulSetToSvc(sts *appsv1.StatefulSet, sty ServiceType, autoRelease ...b
 			Port:     data.Ports[0].ContainerPort,
 		})
 	}
-	svc := NewSvc().SetNamespaceAndName(sts.GetNamespace(), sts.GetName()).SetSelector(sts.Spec.Template.GetLabels()).SetPorts(ports).SetServiceType(sty)
+	svc := NewSvc().SetNamespaceAndName(sts.GetNamespace(), sts.GetName()).SetSelector(sts.Spec.Template.GetLabels()).SetPorts(ports)
+	if isHeadless {
+		svc = svc.Headless()
+	} else {
+		svc = svc.SetServiceType(sty)
+	}
 	if len(autoRelease) > 0 && autoRelease[0] == true {
 		return svc.Release()
 	}
