@@ -207,7 +207,7 @@ func (obj *DaemonSet) SetPVClaim(volumeName, claimName string) *DaemonSet {
 // mountPath: runtime container dir eg:/var/lib/mysql
 func (obj *DaemonSet) SetPVCMounts(volumeName, mountPath string) *DaemonSet {
 	obj.error(setPVCMounts(&obj.ds.Spec.Template, volumeName, mountPath))
-	return nil
+	return obj
 }
 
 // SetEnvs set Pod Environmental variable
@@ -257,6 +257,24 @@ func (obj *DaemonSet) Release() (*v1.DaemonSet, error) {
 // GetPodLabel get pod labels
 func (obj *DaemonSet) GetPodLabel() map[string]string {
 	return obj.ds.Spec.Template.GetLabels()
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *DaemonSet) Apply() (*v1.DaemonSet, error) {
+	ds, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.AppsV1().DaemonSets(ds.GetNamespace()).Get(ds.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.AppsV1().DaemonSets(ds.GetNamespace()).Create(ds)
+	}
+	return client.AppsV1().DaemonSets(ds.GetNamespace()).Update(ds)
 }
 
 func (obj *DaemonSet) error(err error) {

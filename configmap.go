@@ -6,6 +6,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ConfigMap include Kubernetes resource object ConfigMap(cm) and error.
@@ -87,6 +88,25 @@ func (obj *ConfigMap) Release() (*v1.ConfigMap, error) {
 		return nil, err
 	}
 	return client.CoreV1().ConfigMaps(cm.GetNamespace()).Create(cm)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *ConfigMap) Apply() (*v1.ConfigMap, error) {
+	cm, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = client.CoreV1().ConfigMaps(cm.GetNamespace()).Get(cm.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.CoreV1().ConfigMaps(cm.GetNamespace()).Create(cm)
+	}
+	return client.CoreV1().ConfigMaps(cm.GetNamespace()).Update(cm)
 }
 
 func (obj *ConfigMap) error(err error) {

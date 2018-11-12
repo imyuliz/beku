@@ -8,6 +8,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/yulibaozi/mapper"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PersistentVolume include Kubernetes resource object PersistentVolume(pv) and error.
@@ -193,6 +194,24 @@ func (obj *PersistentVolume) Release() (*v1.PersistentVolume, error) {
 		return nil, err
 	}
 	return client.CoreV1().PersistentVolumes().Create(pv)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *PersistentVolume) Apply() (*v1.PersistentVolume, error) {
+	pv, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.CoreV1().PersistentVolumes().Get(pv.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.CoreV1().PersistentVolumes().Create(pv)
+	}
+	return client.CoreV1().PersistentVolumes().Update(pv)
 }
 
 func (obj *PersistentVolume) error(err error) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Service include Kubernetes resource object Service and error
@@ -153,6 +154,24 @@ func (obj *Service) Release() (*v1.Service, error) {
 		return nil, err
 	}
 	return client.CoreV1().Services(svc.GetNamespace()).Create(svc)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *Service) Apply() (*v1.Service, error) {
+	svc, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.CoreV1().Services(svc.GetNamespace()).Get(svc.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.CoreV1().Services(svc.GetNamespace()).Create(svc)
+	}
+	return client.CoreV1().Services(svc.GetNamespace()).Update(svc)
 }
 
 func (obj *Service) error(err error) {

@@ -7,6 +7,7 @@ import (
 	"github.com/ghodss/yaml"
 	"k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -168,7 +169,7 @@ func (obj *StatefulSet) SetPVClaim(volumeName, claimName string) *StatefulSet {
 // mountPath: runtime container dir eg:/var/lib/mysql
 func (obj *StatefulSet) SetPVCMounts(volumeName, mountPath string) *StatefulSet {
 	obj.error(setPVCMounts(&obj.sts.Spec.Template, volumeName, mountPath))
-	return nil
+	return obj
 }
 
 // SetPVCTemp set StatefulSet PersistentVolumeClaimTemplate
@@ -300,6 +301,24 @@ func (obj *StatefulSet) Release() (*v1.StatefulSet, error) {
 		return nil, err
 	}
 	return client.AppsV1().StatefulSets(sts.GetNamespace()).Create(sts)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *StatefulSet) Apply() (*v1.StatefulSet, error) {
+	sts, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.AppsV1().StatefulSets(sts.GetNamespace()).Get(sts.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.AppsV1().StatefulSets(sts.GetNamespace()).Create(sts)
+	}
+	return client.AppsV1().StatefulSets(sts.GetNamespace()).Update(sts)
 }
 
 // verify check service necessary value, input the default field and input related data.

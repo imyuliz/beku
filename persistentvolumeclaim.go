@@ -211,6 +211,24 @@ func (obj *PersistentVolumeClaim) Release() (*v1.PersistentVolumeClaim, error) {
 	return client.CoreV1().PersistentVolumeClaims(pvc.GetNamespace()).Create(pvc)
 }
 
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *PersistentVolumeClaim) Apply() (*v1.PersistentVolumeClaim, error) {
+	pvc, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.CoreV1().PersistentVolumeClaims(pvc.GetNamespace()).Get(pvc.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.CoreV1().PersistentVolumeClaims(pvc.GetNamespace()).Create(pvc)
+	}
+	return client.CoreV1().PersistentVolumeClaims(pvc.GetNamespace()).Update(pvc)
+}
+
 func (obj *PersistentVolumeClaim) error(err error) {
 	if obj.err != nil {
 		return

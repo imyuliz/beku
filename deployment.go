@@ -279,7 +279,7 @@ func (obj *Deployment) SetPVClaim(volumeName, claimName string) *Deployment {
 // mountPath: runtime container dir eg:/var/lib/mysql
 func (obj *Deployment) SetPVCMounts(volumeName, mountPath string) *Deployment {
 	obj.error(setPVCMounts(&obj.dp.Spec.Template, volumeName, mountPath))
-	return nil
+	return obj
 }
 
 func (obj *Deployment) error(err error) {
@@ -327,6 +327,24 @@ func (obj *Deployment) Release() (*v1.Deployment, error) {
 		return nil, err
 	}
 	return client.AppsV1().Deployments(dp.GetNamespace()).Create(dp)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *Deployment) Apply() (*v1.Deployment, error) {
+	dp, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.AppsV1().Deployments(dp.GetNamespace()).Get(dp.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.AppsV1().Deployments(dp.GetNamespace()).Create(dp)
+	}
+	return client.AppsV1().Deployments(dp.GetNamespace()).Update(dp)
 }
 
 // verify check service necessary value, input the default field and input related data.

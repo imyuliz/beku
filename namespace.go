@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Namespace include Kubernets resource object Namespace and err
@@ -40,6 +41,24 @@ func (obj *Namespace) Release() (*v1.Namespace, error) {
 		return nil, err
 	}
 	return client.CoreV1().Namespaces().Create(ns)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *Namespace) Apply() (*v1.Namespace, error) {
+	ns, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.CoreV1().Namespaces().Get(ns.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.CoreV1().Namespaces().Create(ns)
+	}
+	return client.CoreV1().Namespaces().Update(ns)
 }
 
 func (obj *Namespace) verify() {

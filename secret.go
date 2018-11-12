@@ -6,6 +6,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Secret include Kuebernetes resource object Secret and error.
@@ -101,6 +102,24 @@ func (obj *Secret) Release() (*v1.Secret, error) {
 		return nil, err
 	}
 	return client.CoreV1().Secrets(sec.GetNamespace()).Create(sec)
+}
+
+// Apply  it will be updated when this resource object exists in K8s,
+// it will be created when it does not exist.
+func (obj *Secret) Apply() (*v1.Secret, error) {
+	sec, err := obj.Finish()
+	if err != nil {
+		return nil, err
+	}
+	client, err := GetKubeClient()
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.CoreV1().Secrets(sec.GetNamespace()).Get(sec.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return client.CoreV1().Secrets(sec.GetNamespace()).Create(sec)
+	}
+	return client.CoreV1().Secrets(sec.GetNamespace()).Update(sec)
 }
 
 func (obj *Secret) error(err error) {
