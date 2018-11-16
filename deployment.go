@@ -289,6 +289,15 @@ func (obj *Deployment) error(err error) {
 	obj.err = err
 }
 
+// ImagePullPolicy  Deployment  pull image policy:Always,Never,IfNotPresent
+func (obj *Deployment) ImagePullPolicy(pullPolicy PullPolicy) *Deployment {
+	if len(obj.dp.Annotations) <= 0 {
+		obj.dp.Annotations = make(map[string]string, 0)
+	}
+	obj.dp.Annotations[ImagePullPolicyKey] = string(pullPolicy)
+	return obj
+}
+
 // SetContainer set Deployment container
 // name:name is container name ,default ""
 // image:image is image name ,must input image
@@ -384,10 +393,18 @@ func (obj *Deployment) verify() {
 	}
 	obj.dp.Kind = "Deployment"
 	obj.dp.APIVersion = "apps/v1"
-	for index := range obj.dp.Spec.Template.Spec.Containers {
-		obj.dp.Spec.Template.Spec.Containers[index].ImagePullPolicy = corev1.PullIfNotPresent
+	if obj.dp.Annotations[ImagePullPolicyKey] == "" {
+		for index := range obj.dp.Spec.Template.Spec.Containers {
+			obj.dp.Spec.Template.Spec.Containers[index].ImagePullPolicy = corev1.PullIfNotPresent
+		}
+		return
 	}
-	return
+	policy := PullPolicy(obj.dp.Annotations[ImagePullPolicyKey]).ToK8s()
+	for index := range obj.dp.Spec.Template.Spec.Containers {
+		obj.dp.Spec.Template.Spec.Containers[index].ImagePullPolicy = policy
+	}
+	delete(obj.dp.Annotations, ImagePullPolicyKey)
+
 }
 
 // autoSetQos auto set Pod of Deployment QOS

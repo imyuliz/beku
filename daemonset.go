@@ -6,6 +6,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -241,6 +242,15 @@ func (obj *DaemonSet) SetImagePullSecrets(secretName string) *DaemonSet {
 	return obj
 }
 
+// ImagePullPolicy  DaemonSet  pull image policy:Always,Never,IfNotPresent
+func (obj *DaemonSet) ImagePullPolicy(pullPolicy PullPolicy) *DaemonSet {
+	if len(obj.ds.Annotations) <= 0 {
+		obj.ds.Annotations = make(map[string]string, 0)
+	}
+	obj.ds.Annotations[ImagePullPolicyKey] = string(pullPolicy)
+	return obj
+}
+
 // Release release DaemonSet on Kubernetes
 func (obj *DaemonSet) Release() (*v1.DaemonSet, error) {
 	ds, err := obj.Finish()
@@ -317,6 +327,17 @@ func (obj *DaemonSet) verify() {
 	}
 	obj.ds.Kind = "DaemonSet"
 	obj.ds.APIVersion = "app/v1"
+	if obj.ds.Annotations[ImagePullPolicyKey] == "" {
+		for index := range obj.ds.Spec.Template.Spec.Containers {
+			obj.ds.Spec.Template.Spec.Containers[index].ImagePullPolicy = corev1.PullIfNotPresent
+		}
+		return
+	}
+	policy := PullPolicy(obj.ds.Annotations[ImagePullPolicyKey]).ToK8s()
+	for index := range obj.ds.Spec.Template.Spec.Containers {
+		obj.ds.Spec.Template.Spec.Containers[index].ImagePullPolicy = policy
+	}
+	delete(obj.ds.Annotations, ImagePullPolicyKey)
 }
 
 // autoSetQos auto set Pod of Deployment QOS

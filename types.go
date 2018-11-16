@@ -432,6 +432,8 @@ const (
 	PullNever PullPolicy = "Never"
 	// PullIfNotPresent means that kubelet pulls if the image isn't present on disk. Container will fail if the image isn't present and the pull fails.
 	PullIfNotPresent PullPolicy = "IfNotPresent"
+	// ImagePullPolicyKey anotation
+	ImagePullPolicyKey = "imagePullPolicy"
 )
 
 // ToK8s image pull policy

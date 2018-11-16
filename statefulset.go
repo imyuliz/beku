@@ -290,6 +290,15 @@ func (obj *StatefulSet) SetImagePullSecrets(secretName string) *StatefulSet {
 	return obj
 }
 
+// ImagePullPolicy  StatefulSet  pull image policy:Always,Never,IfNotPresent
+func (obj *StatefulSet) ImagePullPolicy(pullPolicy PullPolicy) *StatefulSet {
+	if len(obj.sts.Annotations) <= 0 {
+		obj.sts.Annotations = make(map[string]string, 0)
+	}
+	obj.sts.Annotations[ImagePullPolicyKey] = string(pullPolicy)
+	return obj
+}
+
 // Release release StatefulSet on Kubernetes
 func (obj *StatefulSet) Release() (*v1.StatefulSet, error) {
 	sts, err := obj.Finish()
@@ -352,11 +361,19 @@ func (obj *StatefulSet) verify() {
 			return
 		}
 	}
-	for index := range obj.sts.Spec.Template.Spec.Containers {
-		obj.sts.Spec.Template.Spec.Containers[index].ImagePullPolicy = corev1.PullIfNotPresent
-	}
 	obj.sts.Kind = "StatefulSet"
 	obj.sts.APIVersion = "apps/v1"
+	if obj.sts.Annotations[ImagePullPolicyKey] == "" {
+		for index := range obj.sts.Spec.Template.Spec.Containers {
+			obj.sts.Spec.Template.Spec.Containers[index].ImagePullPolicy = corev1.PullIfNotPresent
+		}
+		return
+	}
+	policy := PullPolicy(obj.sts.Annotations[ImagePullPolicyKey]).ToK8s()
+	for index := range obj.sts.Spec.Template.Spec.Containers {
+		obj.sts.Spec.Template.Spec.Containers[index].ImagePullPolicy = policy
+	}
+	delete(obj.sts.Annotations, ImagePullPolicyKey)
 }
 
 // autoSetQos auto set Pod of StatefulSet QOS
