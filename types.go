@@ -300,6 +300,22 @@ func (r ResourceName) ToK8s() v1.ResourceName {
 	return ""
 }
 
+func stringToResourceName(resource string) ResourceName {
+	switch resource {
+	case "cpu":
+		return ResourceCPU
+	case "storage":
+		return ResourceStorage
+	case "memory":
+		return ResourceMemory
+	case "ephemeral-storage":
+		return ResourceEphemeralStorage
+	case "alpha.kubernetes.io/nvidia-gpu":
+		return ResourceNvidiaGPU
+	}
+	return ""
+}
+
 // PersistentVolumeAccessMode volume access mode read,write
 type PersistentVolumeAccessMode string
 
@@ -420,6 +436,22 @@ func (ty SecretType) ToK8s() v1.SecretType {
 	default:
 		return v1.SecretTypeOpaque
 	}
+}
+
+// MapsToResources string type resource object to beku resource resource object
+func MapsToResources(resources map[string]string) map[ResourceName]string {
+	if resources == nil {
+		return nil
+	}
+	rns := make(map[ResourceName]string, 0)
+	for k, data := range resources {
+		name := stringToResourceName(k)
+		if name == "" {
+			continue
+		}
+		rns[name] = data
+	}
+	return rns
 }
 
 // PullPolicy describes a policy for if/when to pull a container image
