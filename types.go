@@ -2,7 +2,6 @@ package beku
 
 import (
 	"errors"
-	"strings"
 
 	"k8s.io/api/core/v1"
 )
@@ -101,20 +100,19 @@ const (
 	ServiceTypeExternalName ServiceType = "ExternalName"
 )
 
+var serviceType = map[ServiceType]v1.ServiceType{
+	"ClusterIP":    v1.ServiceTypeClusterIP,
+	"NodePort":     v1.ServiceTypeNodePort,
+	"LoadBalancer": v1.ServiceTypeLoadBalancer,
+	"ExternalName": v1.ServiceTypeExternalName,
+}
+
 // ToK8s  translate into Kubernetes ServiceType
 func (sty ServiceType) ToK8s() v1.ServiceType {
-	switch t := string(sty); t {
-	case "ClusterIP":
-		return v1.ServiceTypeClusterIP
-	case "NodePort":
-		return v1.ServiceTypeNodePort
-	// case "ExternalName":
-	// 	return v1.ServiceTypeExternalName
-	case "LoadBalancer":
-		return v1.ServiceTypeLoadBalancer
-	default:
-		return v1.ServiceTypeClusterIP
+	if r := serviceType[sty]; r != "" {
+		return r
 	}
+	return v1.ServiceTypeClusterIP
 }
 
 // Protocol defines network protocols supported for things like container ports.
@@ -127,13 +125,15 @@ const (
 	ProtocolUDP Protocol = "UDP"
 )
 
+var pros = map[Protocol]v1.Protocol{
+	"TCP": v1.ProtocolTCP,
+	"UDP": v1.ProtocolUDP,
+}
+
 // ToK8s translate into Kubernetes Protocol
 func (pro Protocol) ToK8s() v1.Protocol {
-	switch p := string(pro); strings.ToUpper(p) {
-	case "TCP":
-		return v1.ProtocolTCP
-	case "UDP":
-		return v1.ProtocolUDP
+	if r := pros[pro]; r != "" {
+		return r
 	}
 	return v1.ProtocolTCP
 }
@@ -148,15 +148,15 @@ const (
 	PersistentVolumeFilesystem PersistentVolumeMode = "Filesystem"
 )
 
+var pvModes = map[PersistentVolumeMode]v1.PersistentVolumeMode{
+	"Block":      v1.PersistentVolumeBlock,
+	"Filesystem": v1.PersistentVolumeFilesystem,
+}
+
 // ToK8s   PersistentVolumeMode translate into   k8s PersistentVolumeMode
 func (vMode PersistentVolumeMode) ToK8s() *v1.PersistentVolumeMode {
-	switch v := string(vMode); v {
-	case "Block":
-		b := v1.PersistentVolumeBlock
-		return &b
-	case "Filesystem":
-		f := v1.PersistentVolumeFilesystem
-		return &f
+	if v := pvModes[vMode]; v != "" {
+		return &v
 	}
 	return nil
 }
@@ -285,33 +285,22 @@ const (
 
 // ToK8s translate into k8s ResourceName
 func (r ResourceName) ToK8s() v1.ResourceName {
-	switch re := string(r); re {
-	case "cpu":
-		return v1.ResourceCPU
-	case "storage":
-		return v1.ResourceStorage
-	case "memory":
-		return v1.ResourceMemory
-	case "ephemeral-storage":
-		return v1.ResourceEphemeralStorage
-	case "alpha.kubernetes.io/nvidia-gpu":
-		return v1.ResourceNvidiaGPU
-	}
-	return ""
+	return v1.ResourceName(stringToResourceName(string(r)))
+}
+
+// resources include k8s support Resource object
+var resources = map[ResourceName]v1.ResourceName{
+	"cpu":                            v1.ResourceCPU,
+	"storage":                        v1.ResourceStorage,
+	"memory":                         v1.ResourceMemory,
+	"ephemeral-storage":              v1.ResourceEphemeralStorage,
+	"alpha.kubernetes.io/nvidia-gpu": v1.ResourceNvidiaGPU,
 }
 
 func stringToResourceName(resource string) ResourceName {
-	switch resource {
-	case "cpu":
-		return ResourceCPU
-	case "storage":
-		return ResourceStorage
-	case "memory":
-		return ResourceMemory
-	case "ephemeral-storage":
-		return ResourceEphemeralStorage
-	case "alpha.kubernetes.io/nvidia-gpu":
-		return ResourceNvidiaGPU
+	r := ResourceName(resource)
+	if resources[r] != "" {
+		return r
 	}
 	return ""
 }
@@ -332,17 +321,18 @@ const (
 	RWX           PersistentVolumeAccessMode = "RWX"
 )
 
+var accessModes = map[PersistentVolumeAccessMode]v1.PersistentVolumeAccessMode{
+	"RWO":           v1.ReadWriteOnce,
+	"ReadWriteOnce": v1.ReadWriteOnce,
+	"ROX":           v1.ReadOnlyMany,
+	"ReadOnlyMany":  v1.ReadOnlyMany,
+	"RWX":           v1.ReadWriteMany,
+	"ReadWriteMany": v1.ReadWriteMany,
+}
+
 // ToK8s translate into k8s accessMode
 func (pvm PersistentVolumeAccessMode) ToK8s() v1.PersistentVolumeAccessMode {
-	switch m := string(pvm); m {
-	case "ReadWriteOnce", "RWO":
-		return v1.ReadWriteOnce
-	case "ReadOnlyMany", "ROX":
-		return v1.ReadOnlyMany
-	case "ReadWriteMany", "RWX":
-		return v1.ReadWriteMany
-	}
-	return ""
+	return accessModes[pvm]
 }
 
 // RBDPersistentVolumeSource Represents a Rados Block Device mount that lasts the lifetime of a pod.
@@ -401,13 +391,16 @@ const (
 	ServiceAffinityNone ServiceAffinity = "None"
 )
 
+// Affinitys service affinitys
+var affinitys = map[ServiceAffinity]v1.ServiceAffinity{
+	"NONE":     v1.ServiceAffinityNone,
+	"CLIENTIP": v1.ServiceAffinityClientIP,
+}
+
 // ToK8s translate into k8s aserviceAffinity
 func (sa ServiceAffinity) ToK8s() v1.ServiceAffinity {
-	switch p := string(sa); strings.ToUpper(p) {
-	case "CLIENTIP":
-		return v1.ServiceAffinityClientIP
-	case "NONE":
-		return v1.ServiceAffinityNone
+	if aff := affinitys[sa]; aff != "" {
+		return aff
 	}
 	return v1.ServiceAffinityNone
 }
@@ -428,14 +421,17 @@ const (
 	SecretTypeServiceAccountToken SecretType = "kubernetes.io/service-account-token"
 )
 
+var secreTypes = map[SecretType]v1.SecretType{
+	"Opaque":                              v1.SecretTypeOpaque,
+	"kubernetes.io/service-account-token": v1.SecretTypeServiceAccountToken,
+}
+
 // ToK8s translate into Kubernets SecretType
 func (ty SecretType) ToK8s() v1.SecretType {
-	switch p := string(ty); p {
-	case "kubernetes.io/service-account-token":
-		return v1.SecretTypeServiceAccountToken
-	default:
-		return v1.SecretTypeOpaque
+	if s := secreTypes[ty]; s != "" {
+		return s
 	}
+	return v1.SecretTypeOpaque
 }
 
 // MapsToResources string type resource object to beku resource resource object
@@ -468,16 +464,18 @@ const (
 	ImagePullPolicyKey = "imagePullPolicy"
 )
 
+var pullPolicys = map[string]v1.PullPolicy{
+	"Always":       v1.PullAlways,
+	"Never":        v1.PullNever,
+	"IfNotPresent": v1.PullIfNotPresent,
+}
+
 // ToK8s image pull policy
 func (pp PullPolicy) ToK8s() v1.PullPolicy {
-	switch p := string(pp); p {
-	case "Always":
-		return v1.PullAlways
-	case "Never":
-		return v1.PullNever
-	default:
-		return v1.PullIfNotPresent
+	if policy := pullPolicys[string(pp)]; policy != "" {
+		return policy
 	}
+	return v1.PullIfNotPresent
 }
 
 // PodQOSClass defines the supported qos classes of Pods.
@@ -492,15 +490,13 @@ const (
 	PodQOSBestEffort PodQOSClass = "BestEffort"
 )
 
+var pods = map[PodQOSClass]v1.PodQOSClass{
+	"Burstable":  v1.PodQOSBurstable,
+	"Guaranteed": v1.PodQOSGuaranteed,
+	"BestEffort": v1.PodQOSBestEffort,
+}
+
 // ToK8s set pod qos
 func (qos PodQOSClass) ToK8s() v1.PodQOSClass {
-	switch p := string(qos); p {
-	case "Guaranteed":
-		return v1.PodQOSGuaranteed
-	case "Burstable":
-		return v1.PodQOSBurstable
-	case "BestEffort":
-		return v1.PodQOSBestEffort
-	}
-	return ""
+	return pods[qos]
 }
