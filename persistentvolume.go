@@ -18,11 +18,7 @@ type PersistentVolume struct {
 }
 
 // NewPV create PersistentVolume and chain function call begin with this function.
-func NewPV() *PersistentVolume {
-	return &PersistentVolume{
-		pv: &v1.PersistentVolume{},
-	}
-}
+func NewPV() *PersistentVolume { return &PersistentVolume{pv: &v1.PersistentVolume{}} }
 
 // Finish chain function call end with this function
 // return Kubernetes resource object PersistentVolume(pv) and error.
@@ -147,6 +143,12 @@ func (obj *PersistentVolume) SetCephFS(cephFs *CephFSPersistentVolumeSource) *Pe
 		}
 	}
 	obj.pv.Spec.PersistentVolumeSource.CephFS = ceph
+	return obj
+}
+
+// SetReclaimPolicy set setReclaim policy
+func (obj *PersistentVolume) SetReclaimPolicy(reclaimPolicy PersistentVolumeReclaimPolicy) *PersistentVolume {
+	obj.pv.Spec.PersistentVolumeReclaimPolicy = reclaimPolicy.ToK8s()
 	return obj
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"k8s.io/api/core/v1"
+	storv1 "k8s.io/api/storage/v1"
 )
 
 const (
@@ -499,4 +500,57 @@ var pods = map[PodQOSClass]v1.PodQOSClass{
 // ToK8s set pod qos
 func (qos PodQOSClass) ToK8s() v1.PodQOSClass {
 	return pods[qos]
+}
+
+// PersistentVolumeReclaimPolicy describes a policy for end-of-life maintenance of persistent volumes.
+type PersistentVolumeReclaimPolicy string
+
+const (
+	// PersistentVolumeReclaimRecycle means the volume will be recycled back into the pool of unbound persistent volumes on release from its claim.
+	// The volume plugin must support Recycling.
+	PersistentVolumeReclaimRecycle PersistentVolumeReclaimPolicy = "Recycle"
+	// PersistentVolumeReclaimDelete means the volume will be deleted from Kubernetes on release from its claim.
+	// The volume plugin must support Deletion.
+	PersistentVolumeReclaimDelete PersistentVolumeReclaimPolicy = "Delete"
+	// PersistentVolumeReclaimRetain means the volume will be left in its current phase (Released) for manual reclamation by the administrator.
+	// The default policy is Retain.
+	PersistentVolumeReclaimRetain PersistentVolumeReclaimPolicy = "Retain"
+)
+
+var pvReclaimPolicys = map[PersistentVolumeReclaimPolicy]v1.PersistentVolumeReclaimPolicy{
+	PersistentVolumeReclaimDelete:  v1.PersistentVolumeReclaimDelete,
+	PersistentVolumeReclaimRetain:  v1.PersistentVolumeReclaimRetain,
+	PersistentVolumeReclaimRecycle: v1.PersistentVolumeReclaimRecycle,
+}
+
+// ToK8s local PersistentVolumeReclaimPolicy to kubernetest PersistentVolumeReclaimPolicy
+func (pvrp PersistentVolumeReclaimPolicy) ToK8s() v1.PersistentVolumeReclaimPolicy {
+	reclaimPolicy := pvReclaimPolicys[pvrp]
+	return reclaimPolicy
+}
+
+// VolumeBindingMode indicates how PersistentVolumeClaims should be bound.
+type VolumeBindingMode string
+
+const (
+	// VolumeBindingImmediate indicates that PersistentVolumeClaims should be
+	// immediately provisioned and bound.  This is the default mode.
+	VolumeBindingImmediate VolumeBindingMode = "Immediate"
+
+	// VolumeBindingWaitForFirstConsumer indicates that PersistentVolumeClaims
+	// should not be provisioned and bound until the first Pod is created that
+	// references the PeristentVolumeClaim.  The volume provisioning and
+	// binding will occur during Pod scheduing.
+	VolumeBindingWaitForFirstConsumer VolumeBindingMode = "WaitForFirstConsumer"
+)
+
+var bindingMode = map[VolumeBindingMode]storv1.VolumeBindingMode{
+	VolumeBindingImmediate:            storv1.VolumeBindingImmediate,
+	VolumeBindingWaitForFirstConsumer: storv1.VolumeBindingWaitForFirstConsumer,
+}
+
+// ToK8s local bindingMode to kubernetes bindingMode
+func (bm VolumeBindingMode) ToK8s() *storv1.VolumeBindingMode {
+	mode := bindingMode[bm]
+	return &mode
 }

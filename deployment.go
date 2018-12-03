@@ -307,6 +307,16 @@ func (obj *Deployment) SetContainer(name, image string, containerPort int32) *De
 	return obj
 }
 
+// SetContainerOne set one container
+func (obj *Deployment) SetContainerOne(container corev1.Container) *Deployment {
+	if obj.dp.Spec.Template.Spec.Containers == nil {
+		obj.dp.Spec.Template.Spec.Containers = []corev1.Container{container}
+		return obj
+	}
+	obj.dp.Spec.Template.Spec.Containers = append(obj.dp.Spec.Template.Spec.Containers, container)
+	return obj
+}
+
 // SetResourceLimit set container of deployment resource limit,eg:CPU and MEMORY
 func (obj *Deployment) SetResourceLimit(limits map[ResourceName]string) *Deployment {
 	obj.error(setResourceLimit(&obj.dp.Spec.Template, limits))
