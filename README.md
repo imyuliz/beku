@@ -142,6 +142,7 @@ persistentVolumeClaim | pvc | core/v1
 persistentVolume | pv | core/v1
 daemonSet | ds | apps/v1
 configMap | cm | core/v1
+storageClass | - | storage.k8s.io/v1
 
 ### Beku Implementation Strategy
 
