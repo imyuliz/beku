@@ -263,6 +263,14 @@ func (obj *Deployment) GetPodLabel() map[string]string {
 	return obj.dp.Spec.Template.GetLabels()
 }
 
+// SetPodPriorityClass set Deployment Pod Priority
+// priorityClassName is Kubernetes resource object PriorityClass name
+// priorityClassName must already exists in kubernetes cluster
+func (obj *Deployment) SetPodPriorityClass(priorityClassName string) *Deployment {
+	obj.error(setPodPriorityClass(&obj.dp.Spec.Template, priorityClassName))
+	return obj
+}
+
 // SetPVClaim set Deployment PersistentVolumeClaimVolumeSource
 // params:
 // volumeName: this is Custom field,you can define VolumeSource name,will be used of the container MountPath,

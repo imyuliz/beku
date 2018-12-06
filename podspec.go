@@ -88,6 +88,14 @@ func setResourceRequests(podTemp *v1.PodTemplateSpec, requests map[ResourceName]
 	}
 	return nil
 }
+func setPodPriorityClass(podTemp *v1.PodTemplateSpec, priorityClassName string) error {
+	if !verifyString(priorityClassName) {
+		return errors.New("Set Pod PriorityClass err,priorityClassName is not allowed to be empty")
+	}
+	podTemp.Spec.PriorityClassName = priorityClassName
+	return nil
+
+}
 
 func setEnvs(podTemp *v1.PodTemplateSpec, envMap map[string]string) error {
 	envs, err := mapToEnvs(envMap)

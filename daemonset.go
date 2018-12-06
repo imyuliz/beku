@@ -211,6 +211,14 @@ func (obj *DaemonSet) SetPVCMounts(volumeName, mountPath string) *DaemonSet {
 	return obj
 }
 
+// SetPodPriorityClass set DaemonSet Pod Priority
+// priorityClassName is Kubernetes resource object PriorityClass name
+// priorityClassName must already exists in kubernetes cluster
+func (obj *DaemonSet) SetPodPriorityClass(priorityClassName string) *DaemonSet {
+	obj.error(setPodPriorityClass(&obj.ds.Spec.Template, priorityClassName))
+	return obj
+}
+
 // SetEnvs set Pod Environmental variable
 func (obj *DaemonSet) SetEnvs(envMap map[string]string) *DaemonSet {
 	obj.error(setEnvs(&obj.ds.Spec.Template, envMap))

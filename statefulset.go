@@ -134,6 +134,14 @@ func (obj *StatefulSet) SetResourceLimit(limits map[ResourceName]string) *Statef
 	return obj
 }
 
+// SetPodPriorityClass set StatefulSet Pod Priority
+// priorityClassName is Kubernetes resource object PriorityClass name
+// priorityClassName must already exists in kubernetes cluster
+func (obj *StatefulSet) SetPodPriorityClass(priorityClassName string) *StatefulSet {
+	obj.error(setPodPriorityClass(&obj.sts.Spec.Template, priorityClassName))
+	return obj
+}
+
 func (obj *StatefulSet) error(err error) {
 	if obj.err != nil {
 		return
