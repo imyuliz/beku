@@ -8,7 +8,7 @@ import (
 
 func Test_CreateSvc(t *testing.T) {
 	svc, err := beku.NewSvc().SetNamespaceAndName("yulibaozi", "mysql-svc").SetSelector(map[string]string{"app": "mysql"}).
-		SetServiceType(beku.ServiceTypeNodePort).SetPorts([]beku.ServicePort{beku.ServicePort{
+		SetServiceType(beku.ServiceTypeNodePort).SetPorts([]beku.ServicePort{{
 		Name: "mysql",
 		Port: 3306,
 	}}).Finish()

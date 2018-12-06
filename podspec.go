@@ -13,7 +13,7 @@ import (
 
 func setImagePullSecrets(podTemp *v1.PodTemplateSpec, secretName string) {
 	if len(podTemp.Spec.ImagePullSecrets) <= 0 {
-		podTemp.Spec.ImagePullSecrets = []v1.LocalObjectReference{v1.LocalObjectReference{Name: secretName}}
+		podTemp.Spec.ImagePullSecrets = []v1.LocalObjectReference{{Name: secretName}}
 		return
 	}
 	podTemp.Spec.ImagePullSecrets = append(podTemp.Spec.ImagePullSecrets, v1.LocalObjectReference{Name: secretName})
@@ -60,7 +60,7 @@ func setResourceLimit(podTemp *v1.PodTemplateSpec, limits map[ResourceName]strin
 	}
 	containerLen := len(podTemp.Spec.Containers)
 	if containerLen < 1 {
-		podTemp.Spec.Containers = []v1.Container{v1.Container{Resources: v1.ResourceRequirements{Limits: data}}}
+		podTemp.Spec.Containers = []v1.Container{{Resources: v1.ResourceRequirements{Limits: data}}}
 		return nil
 	}
 	for index := 0; index < containerLen; index++ {
@@ -78,7 +78,7 @@ func setResourceRequests(podTemp *v1.PodTemplateSpec, requests map[ResourceName]
 	}
 	containerLen := len(podTemp.Spec.Containers)
 	if containerLen < 1 {
-		podTemp.Spec.Containers = []v1.Container{v1.Container{Resources: v1.ResourceRequirements{Requests: data}}}
+		podTemp.Spec.Containers = []v1.Container{{Resources: v1.ResourceRequirements{Requests: data}}}
 		return nil
 	}
 	for index := 0; index < containerLen; index++ {
@@ -104,7 +104,7 @@ func setEnvs(podTemp *v1.PodTemplateSpec, envMap map[string]string) error {
 	}
 	containerLen := len(podTemp.Spec.Containers)
 	if containerLen < 1 {
-		podTemp.Spec.Containers = []v1.Container{v1.Container{Env: envs}}
+		podTemp.Spec.Containers = []v1.Container{{Env: envs}}
 		return nil
 	}
 	for index := 0; index < containerLen; index++ {
@@ -152,7 +152,7 @@ func setPVClaim(podTemp *v1.PodTemplateSpec, volumeName, claimName string) error
 
 func setLiveness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 	if len(podTemp.Spec.Containers) <= 0 {
-		podTemp.Spec.Containers = []v1.Container{v1.Container{LivenessProbe: probe}}
+		podTemp.Spec.Containers = []v1.Container{{LivenessProbe: probe}}
 		return nil
 	}
 	podTemp.Spec.Containers[0].LivenessProbe = probe
@@ -160,7 +160,7 @@ func setLiveness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 }
 func setReadness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 	if len(podTemp.Spec.Containers) <= 0 {
-		podTemp.Spec.Containers = []v1.Container{v1.Container{ReadinessProbe: probe}}
+		podTemp.Spec.Containers = []v1.Container{{ReadinessProbe: probe}}
 		return nil
 	}
 	podTemp.Spec.Containers[0].ReadinessProbe = probe
