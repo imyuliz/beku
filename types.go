@@ -291,11 +291,10 @@ func (r ResourceName) ToK8s() v1.ResourceName {
 
 // resources include k8s support Resource object
 var resources = map[ResourceName]v1.ResourceName{
-	"cpu":                            v1.ResourceCPU,
-	"storage":                        v1.ResourceStorage,
-	"memory":                         v1.ResourceMemory,
-	"ephemeral-storage":              v1.ResourceEphemeralStorage,
-	"alpha.kubernetes.io/nvidia-gpu": v1.ResourceNvidiaGPU,
+	"cpu":               v1.ResourceCPU,
+	"memory":            v1.ResourceMemory,
+	"storage":           v1.ResourceStorage,
+	"ephemeral-storage": v1.ResourceEphemeralStorage,
 }
 
 func stringToResourceName(resource string) ResourceName {
