@@ -293,3 +293,33 @@ func RegisterK8sClient(host, ca, cert, key string) error {
 	defaultClient.Host = host
 	return nil
 }
+
+// RegisterK8sClientBase64 register k8s apiServer Client on Beku
+// use the function when ca,cert,key were base64 encode.
+// the function will base64 decode ca,cert,key
+func RegisterK8sClientBase64(host, ca, cert, key string) error {
+	if strings.TrimSpace(host) == "" {
+		return errors.New("RegisterK8sClient failed,host is not allowed to be empty")
+	}
+	if ca != "" && cert != "" && key != "" {
+		caByts, err := Base64Decode(ca)
+		if err != nil {
+			return err
+		}
+		certByts, err := Base64Decode(cert)
+		if err != nil {
+			return err
+		}
+		keyByts, err := Base64Decode(key)
+		if err != nil {
+			return err
+		}
+		defaultClient.Host = host
+		defaultClient.CAData = caByts
+		defaultClient.CertData = certByts
+		defaultClient.KeyData = keyByts
+		return nil
+	}
+	defaultClient.Host = host
+	return nil
+}
