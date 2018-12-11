@@ -17,6 +17,13 @@ var (
 	keyBase64 = "LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1JSGNBZ0VCQkVJQVFMYTVLTUFmVDVicjdsc09MVlFtTlJ5RW96YTU1M2hRTGt2bGhhYXJLRVhQczQxVFhFblgKT3F3S1FiK01VaDhzL005Y1hmdFhrVjRmSHdHcTZFdUd5ZmFnQndZRks0RUVBQ09oZ1lrRGdZWUFCQUd2WFJNNQozNGRSR0kwWXJXSHFwdnFoZVp4QmxuNWlMV3hrM1ZoWGZGOWpaRm5wUFF3MExyVE1FcHpsS1d3MHV2cmxpY2YrCnpzWVNEengrUi9FeTBRWjY1d0F2RXY1T0pjM3Uwc0g1cCtyMThNKzR2UnVaVTM5L2FFMHRTbU5UM2Z1NlI4aGkKZ1VqaU5LdWsyQStMdXFzbnNsWVdXZnF0bDZ1TmZBbmUvRS9mZGJZbldRPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo="
 )
 
+func Example_beku_RegisterK8sClientBase64() {
+	err := beku.RegisterK8sClientBase64("https://192.168.0.183:8080", caBase64, certBase64, keyBase64)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // certificate-authority-data
 var ca = `-----BEGIN CERTIFICATE-----
 MIIB0jCCATOgAwIBAgIJAIA+5gaTxf6NMAoGCCqGSM49BAMCMBgxFjAUBgNVBAMM
@@ -54,14 +61,6 @@ OqwKQb+MUh8s/M9cXftXkV4fHwGq6EuGyfagBwYFK4EEACOhgYkDgYYABAGvXRM5
 zsYSDzx+R/Ey0QZ65wAvEv5OJc3u0sH5p+r18M+4vRuZU39/aE0tSmNT3fu6R8hi
 gUjiNKuk2A+LuqsnslYWWfqtl6uNfAne/E/fdbYnWQ==
 -----END EC PRIVATE KEY-----`
-
-func Example_beku_RegisterK8sClientBase64() {
-	err := beku.RegisterK8sClientBase64("https://192.168.0.183:8080", caBase64, certBase64, keyBase64)
-	if err != nil {
-		panic(err)
-	}
-
-}
 
 func Example_beku_RegisterK8sClient() {
 	err := beku.RegisterK8sClient("https://192.168.0.183:8080", ca, cert, key)
