@@ -1,6 +1,6 @@
 # Beku
 
-[![GoDoc](https://godoc.org/github.com/imroc/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
+[![GoDoc](https://godoc.org/github.com/yulibaozi/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yulibaozi/beku)](https://goreportcard.com/badge/github.com/yulibaozi/beku)
 
 Beku is an extremely user-friendly Kubernetes API resources building library, extremely easy without any extra intelligence. 

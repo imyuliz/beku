@@ -1,5 +1,5 @@
 # beku
-[![GoDoc](https://godoc.org/github.com/imroc/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
+[![GoDoc](https://godoc.org/github.com/yulibaozi/beku?status.svg)](https://godoc.org/github.com/yulibaozi/beku)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yulibaozi/beku)](https://goreportcard.com/badge/github.com/yulibaozi/beku)
 
 Golang人性化Kubernetes资源对象创建库。极简，无额外心智负担。

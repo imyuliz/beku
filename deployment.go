@@ -202,6 +202,50 @@ func (obj *Deployment) SetTCPReadness(host string, port int, initDelaySec, timeo
 	return obj
 }
 
+// SetPreStopExec set StatefulSet PreStop command
+// PreStop is called immediately before a container is terminated.
+// The container is terminated after the handler completes.
+// The reason for termination is passed to the handler.
+// Regardless of the outcome of the handler, the container is eventually terminated.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *Deployment) SetPreStopExec(command []string) *Deployment {
+	setPreStopExec(&obj.dp.Spec.Template, command)
+	return obj
+}
+
+// SetPostStartExec set PostStart shell command style
+// PostStart is called immediately after a container is created. If the handler fails,
+// the container is terminated and restarted according to its restart policy.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *Deployment) SetPostStartExec(command []string) *Deployment {
+	setPostStartExec(&obj.dp.Spec.Template, command)
+	return obj
+}
+
+// SetPreStopHTTP set preStop  http style
+// PreStop is called immediately before a container is terminated.
+// The container is terminated after the handler completes.
+// The reason for termination is passed to the handler.
+// Regardless of the outcome of the handler, the container is eventually terminated.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *Deployment) SetPreStopHTTP(scheme URIScheme, host string, port int, path string, headers ...map[string]string) *Deployment {
+	setPreStopHTTP(&obj.dp.Spec.Template, scheme, host, port, path, headers...)
+	return obj
+}
+
+// SetPostStartHTTP set  PostStart http style
+// PostStart is called immediately after a container is created. If the handler fails,
+// the container is terminated and restarted according to its restart policy.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *Deployment) SetPostStartHTTP(scheme URIScheme, host string, port int, path string, headers ...map[string]string) *Deployment {
+	setPostStartHTTP(&obj.dp.Spec.Template, scheme, host, port, path, headers...)
+	return obj
+}
+
 // SetMatchExpressions set Deployment match expressions
 // the field is used to set complicated Label.
 func (obj *Deployment) SetMatchExpressions(ents []LabelSelectorRequirement) *Deployment {

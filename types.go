@@ -553,3 +553,13 @@ func (bm VolumeBindingMode) ToK8s() *storv1.VolumeBindingMode {
 	mode := bindingMode[bm]
 	return &mode
 }
+
+// URIScheme identifies the scheme used for connection to a host for Get actions
+type URIScheme string
+
+const (
+	// URISchemeHTTP means that the scheme used will be http://
+	URISchemeHTTP URIScheme = "HTTP"
+	// URISchemeHTTPS means that the scheme used will be https://
+	URISchemeHTTPS URIScheme = "HTTPS"
+)

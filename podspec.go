@@ -88,6 +88,92 @@ func setResourceRequests(podTemp *v1.PodTemplateSpec, requests map[ResourceName]
 	}
 	return nil
 }
+
+func setPreStopExec(podTemp *v1.PodTemplateSpec, command []string) {
+	containerLen := len(podTemp.Spec.Containers)
+	if containerLen < 1 {
+		podTemp.Spec.Containers = []v1.Container{{Lifecycle: &v1.Lifecycle{PreStop: &v1.Handler{Exec: &v1.ExecAction{Command: command}}}}}
+		return
+	}
+	for index := 0; index < containerLen; index++ {
+		if podTemp.Spec.Containers[index].Lifecycle == nil {
+			podTemp.Spec.Containers[index].Lifecycle = &v1.Lifecycle{PreStop: &v1.Handler{Exec: &v1.ExecAction{Command: command}}}
+			return
+		}
+		if podTemp.Spec.Containers[index].Lifecycle.PreStop == nil {
+			podTemp.Spec.Containers[index].Lifecycle.PreStop = &v1.Handler{Exec: &v1.ExecAction{Command: command}}
+			return
+		}
+		continue
+		// podTemp.Spec.Containers[index].Lifecycle.PreStop.Exec = &v1.ExecAction{Command: command}
+		// return
+	}
+}
+
+func setPreStopHTTP(podTemp *v1.PodTemplateSpec, scheme URIScheme, host string, port int, path string, headers ...map[string]string) {
+	httpAction := &v1.HTTPGetAction{Path: path, Port: FromInt(port), HTTPHeaders: mapsToHeaders(headers), Scheme: v1.URIScheme(scheme)}
+	containerLen := len(podTemp.Spec.Containers)
+	if containerLen < 1 {
+		podTemp.Spec.Containers = []v1.Container{{Lifecycle: &v1.Lifecycle{PreStop: &v1.Handler{HTTPGet: httpAction}}}}
+		return
+	}
+	for index := 0; index < containerLen; index++ {
+		if podTemp.Spec.Containers[index].Lifecycle == nil {
+			podTemp.Spec.Containers[index].Lifecycle = &v1.Lifecycle{PreStop: &v1.Handler{HTTPGet: httpAction}}
+			return
+		}
+		if podTemp.Spec.Containers[index].Lifecycle.PreStop == nil {
+			podTemp.Spec.Containers[index].Lifecycle.PreStop = &v1.Handler{HTTPGet: httpAction}
+			return
+		}
+		continue
+		// podTemp.Spec.Containers[index].Lifecycle.PreStop.HTTPGet = httpAction
+		// return
+	}
+}
+
+func setPostStartExec(podTemp *v1.PodTemplateSpec, command []string) {
+	containerLen := len(podTemp.Spec.Containers)
+	if containerLen < 1 {
+		podTemp.Spec.Containers = []v1.Container{{Lifecycle: &v1.Lifecycle{PostStart: &v1.Handler{Exec: &v1.ExecAction{Command: command}}}}}
+		return
+	}
+	for index := 0; index < containerLen; index++ {
+		if podTemp.Spec.Containers[index].Lifecycle == nil {
+			podTemp.Spec.Containers[index].Lifecycle = &v1.Lifecycle{PostStart: &v1.Handler{Exec: &v1.ExecAction{Command: command}}}
+			return
+		}
+		if podTemp.Spec.Containers[index].Lifecycle.PostStart == nil {
+			podTemp.Spec.Containers[index].Lifecycle.PostStart = &v1.Handler{Exec: &v1.ExecAction{Command: command}}
+			return
+		}
+		continue
+	}
+}
+
+func setPostStartHTTP(podTemp *v1.PodTemplateSpec, scheme URIScheme, host string, port int, path string, headers ...map[string]string) {
+	httpAction := &v1.HTTPGetAction{Path: path, Port: FromInt(port), HTTPHeaders: mapsToHeaders(headers), Scheme: v1.URIScheme(scheme)}
+	containerLen := len(podTemp.Spec.Containers)
+	if containerLen < 1 {
+		podTemp.Spec.Containers = []v1.Container{{Lifecycle: &v1.Lifecycle{PostStart: &v1.Handler{HTTPGet: httpAction}}}}
+		return
+	}
+	for index := 0; index < containerLen; index++ {
+		if podTemp.Spec.Containers[index].Lifecycle == nil {
+			podTemp.Spec.Containers[index].Lifecycle = &v1.Lifecycle{PostStart: &v1.Handler{HTTPGet: httpAction}}
+			return
+		}
+		if podTemp.Spec.Containers[index].Lifecycle.PostStart == nil {
+			podTemp.Spec.Containers[index].Lifecycle.PostStart = &v1.Handler{HTTPGet: httpAction}
+			return
+		}
+		continue
+		// podTemp.Spec.Containers[index].Lifecycle.PostStart.HTTPGet = httpAction
+		// return
+	}
+
+}
+
 func setPodPriorityClass(podTemp *v1.PodTemplateSpec, priorityClassName string) error {
 	if !verifyString(priorityClassName) {
 		return errors.New("Set Pod PriorityClass err,priorityClassName is not allowed to be empty")
@@ -155,7 +241,13 @@ func setLiveness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 		podTemp.Spec.Containers = []v1.Container{{LivenessProbe: probe}}
 		return nil
 	}
-	podTemp.Spec.Containers[0].LivenessProbe = probe
+	for index := range podTemp.Spec.Containers {
+		if podTemp.Spec.Containers[index].LivenessProbe == nil {
+			podTemp.Spec.Containers[index].LivenessProbe = probe
+			return nil
+		}
+		continue
+	}
 	return nil
 }
 func setReadness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
@@ -163,7 +255,13 @@ func setReadness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 		podTemp.Spec.Containers = []v1.Container{{ReadinessProbe: probe}}
 		return nil
 	}
-	podTemp.Spec.Containers[0].ReadinessProbe = probe
+	for index := range podTemp.Spec.Containers {
+		if podTemp.Spec.Containers[index].ReadinessProbe == nil {
+			podTemp.Spec.Containers[index].ReadinessProbe = probe
+			return nil
+		}
+		continue
+	}
 	return nil
 }
 

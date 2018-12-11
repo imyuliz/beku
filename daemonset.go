@@ -211,6 +211,50 @@ func (obj *DaemonSet) SetPVCMounts(volumeName, mountPath string) *DaemonSet {
 	return obj
 }
 
+// SetPreStopExec set StatefulSet PreStop command
+// PreStop is called immediately before a container is terminated.
+// The container is terminated after the handler completes.
+// The reason for termination is passed to the handler.
+// Regardless of the outcome of the handler, the container is eventually terminated.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *DaemonSet) SetPreStopExec(command []string) *DaemonSet {
+	setPreStopExec(&obj.ds.Spec.Template, command)
+	return obj
+}
+
+// SetPostStartExec set PostStart shell command style
+// PostStart is called immediately after a container is created. If the handler fails,
+// the container is terminated and restarted according to its restart policy.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *DaemonSet) SetPostStartExec(command []string) *DaemonSet {
+	setPostStartExec(&obj.ds.Spec.Template, command)
+	return obj
+}
+
+// SetPreStopHTTP set preStop  http style
+// PreStop is called immediately before a container is terminated.
+// The container is terminated after the handler completes.
+// The reason for termination is passed to the handler.
+// Regardless of the outcome of the handler, the container is eventually terminated.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *DaemonSet) SetPreStopHTTP(scheme URIScheme, host string, port int, path string, headers ...map[string]string) *DaemonSet {
+	setPreStopHTTP(&obj.ds.Spec.Template, scheme, host, port, path, headers...)
+	return obj
+}
+
+// SetPostStartHTTP set  PostStart http style
+// PostStart is called immediately after a container is created. If the handler fails,
+// the container is terminated and restarted according to its restart policy.
+// Other management of the container blocks until the hook completes.
+// More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks
+func (obj *DaemonSet) SetPostStartHTTP(scheme URIScheme, host string, port int, path string, headers ...map[string]string) *DaemonSet {
+	setPostStartHTTP(&obj.ds.Spec.Template, scheme, host, port, path, headers...)
+	return obj
+}
+
 // SetPodPriorityClass set DaemonSet Pod Priority
 // priorityClassName is Kubernetes resource object PriorityClass name
 // priorityClassName must already exists in kubernetes cluster
