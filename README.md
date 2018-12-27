@@ -143,6 +143,8 @@ persistentVolume | pv | core/v1
 daemonSet | ds | apps/v1
 configMap | cm | core/v1
 storageClass | - | storage.k8s.io/v1
+pod | - | core/v1
+priorityClass | - | scheduling.k8s.io/v1beta1
 
 ### Beku Implementation Strategy
 
@@ -151,7 +153,7 @@ storageClass | - | storage.k8s.io/v1
 	* apps/v1
 	...
 
-2. When implementing Kubernetes API resource objects which lack of stable version, Alpha, Beta versions will not be implemented. Because less stable versions have more probablities to be changed. 
+2. When implementing Kubernetes API resource objects which lack of stable version, Alpha versions will not be implemented. Because less stable versions have more probablities to be changed. 
 3. Kubernetes API resource versions references:
 [Kubernetes API Introduction](http://kubernetes.kansea.com/docs/api/)
 

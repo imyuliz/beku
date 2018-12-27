@@ -3,6 +3,7 @@ package beku
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/apps/v1"
@@ -431,8 +432,9 @@ func (obj *Deployment) verify() {
 		obj.err = errors.New("Deployment.Spec.Templata.Labels is not allowed to be empty")
 		return
 	}
-	if obj.dp.Spec.Template.Spec.Containers == nil || len(obj.dp.Spec.Template.Spec.Containers) < 1 {
-		obj.err = errors.New("Deployment.Spec.Template.Spec.Containers is not allowed to be empty")
+
+	if err := containerRepeated(obj.dp.Spec.Template.Spec.Containers); err != nil {
+		obj.err = fmt.Errorf("Deployment.Spec.Template.Spec.Containers err:%s", err.Error())
 		return
 	}
 	if obj.dp.Spec.Selector == nil {

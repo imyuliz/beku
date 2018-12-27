@@ -3,6 +3,7 @@ package beku
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/apps/v1"
@@ -395,8 +396,8 @@ func (obj *StatefulSet) verify() {
 		obj.err = errors.New("StatefulSet.Spec.Selector.MatchLabels is not allowed to be empty")
 		return
 	}
-	if len(obj.sts.Spec.Template.Spec.Containers) < 1 {
-		obj.err = errors.New("StatefulSet.Container is not allowed to be empty")
+	if err := containerRepeated(obj.sts.Spec.Template.Spec.Containers); err != nil {
+		obj.err = fmt.Errorf("StatefulSet.Spec.Template.Spec.Containers err:%s", err.Error())
 		return
 	}
 	//check qos set,if err!=nil, check need auto set qos

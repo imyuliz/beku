@@ -137,6 +137,9 @@ persistentVolume | pv | core/v1
 daemonSet | ds | apps/v1
 configMap | cm | core/v1
 storageClass | - | storage.k8s.io/v1
+pod | - | core/v1
+priorityClass | - | scheduling.k8s.io/v1beta1
+
 
 ### beku的实现策略
 
@@ -145,7 +148,7 @@ storageClass | - | storage.k8s.io/v1
     * apps/v1
     ...
 
-2. **当某资源对象缺少稳定级版本时**, 在实现kubernetes resouce object时, 不会实现Alpha, Beta级别的资源对象, 如果k8s某资源对象不存在stable版本, beku会选择放弃实现, 原因是其他不稳定版本或者较稳定版本存在更改的风险较大, 稳定性会降低。
+2. **当某资源对象缺少稳定级版本时**, 在实现kubernetes resouce object时, 不会实现Alpha级别的资源对象, 如果k8s某资源对象不存在stable版本, beku会选择放弃实现, 原因是其他不稳定版本或者较稳定版本存在更改的风险较大, 稳定性会降低。
 
 3. 关于API版本的参考资料如下:
 [Kubernetes API 概述](http://kubernetes.kansea.com/docs/api/)

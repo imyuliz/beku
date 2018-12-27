@@ -3,6 +3,7 @@ package beku
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/ghodss/yaml"
 	"k8s.io/api/apps/v1"
@@ -355,10 +356,11 @@ func (obj *DaemonSet) verify() {
 		obj.err = errors.New("DaemonSet.Name is not allowed to be empty")
 		return
 	}
-	if obj.ds.Spec.Template.Spec.Containers == nil || len(obj.ds.Spec.Template.Spec.Containers) < 1 {
-		obj.err = errors.New("DaemonSet.Spec.Template.Spec.Containers is not allowed to be empty")
+	if err := containerRepeated(obj.ds.Spec.Template.Spec.Containers); err != nil {
+		obj.err = fmt.Errorf("DaemonSet.Spec.Template.Spec.Containers err:%s", err.Error())
 		return
 	}
+
 	if len(obj.GetPodLabel()) < 1 {
 		obj.err = errors.New("Pod Labels is not allowed to be empty,you can call SetPodLabels input")
 		return

@@ -323,3 +323,17 @@ func RegisterK8sClientBase64(host, ca, cert, key string) error {
 	defaultClient.Host = host
 	return nil
 }
+
+func containerRepeated(containers []v1.Container) error {
+	if containers == nil {
+		return errors.New("Containers is not allowed to be empty")
+	}
+	containerNames := make(map[string]int8, 0)
+	for _, container := range containers {
+		containerNames[container.Name] = 1
+	}
+	if len(containerNames) < len(containers) {
+		return errors.New("Multiple container names cannot be repeated")
+	}
+	return nil
+}
