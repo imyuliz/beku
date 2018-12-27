@@ -242,8 +242,27 @@ func getClientConfig() *client {
 	return defaultClient
 }
 
+func setClientConfig(host string, ca, cert, key []byte) error {
+	defaultClient.Host = host
+	if len(ca) <= 1 && len(cert) <= 1 && len(key) <= 1 {
+		return nil
+	}
+	defaultClient.CAData = ca
+	defaultClient.CertData = cert
+	defaultClient.KeyData = key
+	return nil
+}
+
 // GetKubeClient get Kubernetes apiServer
-func GetKubeClient() (*kubernetes.Clientset, error) {
+func GetKubeClient(isInCluster ...bool) (*kubernetes.Clientset, error) {
+	// Incluster  call apiserver
+	if len(isInCluster) > 0 && isInCluster[0] {
+		restConf, err := rest.InClusterConfig()
+		if err != nil {
+			return nil, fmt.Errorf("get InClusterConfig err:%s", err.Error())
+		}
+		return kubernetes.NewForConfig(restConf)
+	}
 	config := getClientConfig()
 	if config.Host == "" {
 		return nil, errors.New("get kubernetes apiserver error,Because Host is empty,you can call function RegisterK8sClient() register")
@@ -283,15 +302,7 @@ func RegisterK8sClient(host, ca, cert, key string) error {
 	if strings.TrimSpace(host) == "" {
 		return errors.New("RegisterK8sClient failed,host is not allowed to be empty")
 	}
-	if ca != "" && cert != "" && key != "" {
-		defaultClient.Host = host
-		defaultClient.CAData = []byte(ca)
-		defaultClient.CertData = []byte(cert)
-		defaultClient.KeyData = []byte(key)
-		return nil
-	}
-	defaultClient.Host = host
-	return nil
+	return setClientConfig(host, []byte(ca), []byte(cert), []byte(key))
 }
 
 // RegisterK8sClientBase64 register k8s apiServer Client on Beku
@@ -301,26 +312,25 @@ func RegisterK8sClientBase64(host, ca, cert, key string) error {
 	if strings.TrimSpace(host) == "" {
 		return errors.New("RegisterK8sClient failed,host is not allowed to be empty")
 	}
+	var (
+		caByts, certByts, keyByts []byte
+		err                       error
+	)
 	if ca != "" && cert != "" && key != "" {
-		caByts, err := Base64Decode(ca)
+		caByts, err = Base64Decode(ca)
 		if err != nil {
 			return err
 		}
-		certByts, err := Base64Decode(cert)
+		certByts, err = Base64Decode(cert)
 		if err != nil {
 			return err
 		}
-		keyByts, err := Base64Decode(key)
+		keyByts, err = Base64Decode(key)
 		if err != nil {
 			return err
 		}
-		defaultClient.Host = host
-		defaultClient.CAData = caByts
-		defaultClient.CertData = certByts
-		defaultClient.KeyData = keyByts
-		return nil
 	}
-	defaultClient.Host = host
+	setClientConfig(host, caByts, certByts, keyByts)
 	return nil
 }
 
