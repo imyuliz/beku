@@ -11,6 +11,10 @@ Beku is an extremely user-friendly Kubernetes API resources building library, ex
 go get -u github.com/yulibaozi/beku
 ```
 
+### RoadMap
+
+[RoadMap](https://github.com/yulibaozi/beku/blob/master/doc/ROADMAP.md)
+
 ### Features
 
 - Auto release resource object on Kubernetes

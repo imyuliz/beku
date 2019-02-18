@@ -10,6 +10,10 @@ Golang人性化Kubernetes资源对象创建库。极简，无额外心智负担�
 go get -u github.com/yulibaozi/beku
 ```
 
+### RoadMap
+
+[RoadMap](https://github.com/yulibaozi/beku/blob/master/doc/ROADMAP.md)
+
 ### 特性
 
 - 自动发布资源对象到Kubernetes
