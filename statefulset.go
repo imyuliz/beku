@@ -343,6 +343,13 @@ func (obj *StatefulSet) SetImagePullSecrets(secretName string) *StatefulSet {
 	return obj
 }
 
+// SetNodeAffinity set node Affinity
+//  corev1: "k8s.io/api/core/v1"
+// func (obj *StatefulSet) SetNodeAffinity(nodeAffinity *corev1.NodeAffinity) *StatefulSet {
+// 	obj.error(setNodeAffinity(&obj.sts.Spec.Template, nodeAffinity))
+// 	return obj
+// }
+
 // ImagePullPolicy  StatefulSet  pull image policy:Always,Never,IfNotPresent
 func (obj *StatefulSet) ImagePullPolicy(pullPolicy PullPolicy) *StatefulSet {
 	if len(obj.sts.Annotations) <= 0 {

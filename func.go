@@ -206,6 +206,7 @@ func tcpProbe(host string, port int, initDelaySec, timeoutSec, periodSec int32) 
 	}
 }
 func verifyString(str string) bool          { return !(str == "" || len(str) <= 0) }
+func emptyString(str string) bool           { return str == "" || len(str) <= 0 }
 func verifyMap(maps map[string]string) bool { return len(maps) > 0 }
 
 func mapToEnvs(envMap map[string]string) ([]v1.EnvVar, error) {

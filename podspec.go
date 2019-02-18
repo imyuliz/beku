@@ -19,6 +19,18 @@ func setImagePullSecrets(podTemp *v1.PodTemplateSpec, secretName string) {
 	podTemp.Spec.ImagePullSecrets = append(podTemp.Spec.ImagePullSecrets, v1.LocalObjectReference{Name: secretName})
 }
 
+// func setNodeAffinity(podTemp *v1.PodTemplateSpec, nodeAffinity *v1.NodeAffinity) error {
+// 	if nodeAffinity == nil {
+// 		return errors.New("setNodeAffinity err, NodeAffinity is not allowed to be empty")
+// 	}
+// 	if podTemp.Spec.Affinity == nil {
+// 		podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: nodeAffinity}
+// 		return nil
+// 	}
+// 	podTemp.Spec.Affinity.NodeAffinity = nodeAffinity
+// 	return nil
+// }
+
 // setContainer set container
 func setContainer(podTemp *v1.PodTemplateSpec, name, image string, containerPort int32) error {
 	// This must be a valid port number, 0 < x < 65536.
