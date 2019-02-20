@@ -1,5 +1,6 @@
 package beku
 
+/*
 import (
 	"errors"
 
@@ -86,3 +87,4 @@ func (obj *PriorityClass) verify() {
 	obj.pc.APIVersion = "scheduling.k8s.io/v1beta1"
 	obj.pc.Kind = "PriorityClass"
 }
+*/
