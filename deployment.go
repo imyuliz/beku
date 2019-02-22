@@ -419,6 +419,41 @@ func (obj *Deployment) Apply() (*v1.Deployment, error) {
 	return client.AppsV1().Deployments(dp.GetNamespace()).Update(dp)
 }
 
+// SetRequiredORNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
+// A list of keys, many key do OR operation.
+func (obj *Deployment) SetRequiredORNodeAffinity(key string, value []string, operator NodeSelectorOperator) *Deployment {
+	nsRequirement := corev1.NodeSelectorRequirement{
+		Key:      key,
+		Operator: operator.ToK8s(),
+		Values:   value,
+	}
+	obj.error(setRequiredORNodeAffinity(&obj.dp.Spec.Template, nsRequirement))
+	return obj
+}
+
+// SetRequiredAndNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
+// A list of keys, many key do AND operation.
+func (obj *Deployment) SetRequiredAndNodeAffinity(key string, value []string, operator NodeSelectorOperator) *Deployment {
+	nsRequirement := corev1.NodeSelectorRequirement{
+		Key:      key,
+		Operator: operator.ToK8s(),
+		Values:   value,
+	}
+	obj.error(setRequiredAndNodeAffinity(&obj.dp.Spec.Template, nsRequirement))
+	return obj
+}
+
+// SetPreferredNodeAffinity set node affinity for PreferredDuringSchedulingIgnoredDuringExecution style
+func (obj *Deployment) SetPreferredNodeAffinity(weight int32, key string, value []string, operator NodeSelectorOperator) *Deployment {
+	nsRequirement := corev1.NodeSelectorRequirement{
+		Key:      key,
+		Operator: operator.ToK8s(),
+		Values:   value,
+	}
+	obj.error(setPreferredNodeAffinity(&obj.dp.Spec.Template, nsRequirement, weight))
+	return obj
+}
+
 // verify check service necessary value, input the default field and input related data.
 func (obj *Deployment) verify() {
 	if obj.err != nil {

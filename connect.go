@@ -89,6 +89,9 @@ func RegisterK8sClient(host, ca, cert, key string) error {
 // RegisterK8sClientBase64 register k8s apiServer Client on Beku
 // use the function when ca,cert,key were base64 encode.
 // the function will base64 decode ca,cert,key
+// ca is certificate-authority-data
+// cert is client-certificate-data
+// key is  client-key-data
 func RegisterK8sClientBase64(host, ca, cert, key string) error {
 	if strings.TrimSpace(host) == "" {
 		return errors.New("RegisterK8sClient failed,host is not allowed to be empty")

@@ -524,8 +524,7 @@ var pvReclaimPolicys = map[PersistentVolumeReclaimPolicy]v1.PersistentVolumeRecl
 
 // ToK8s local PersistentVolumeReclaimPolicy to kubernetest PersistentVolumeReclaimPolicy
 func (pvrp PersistentVolumeReclaimPolicy) ToK8s() v1.PersistentVolumeReclaimPolicy {
-	reclaimPolicy := pvReclaimPolicys[pvrp]
-	return reclaimPolicy
+	return pvReclaimPolicys[pvrp]
 }
 
 // VolumeBindingMode indicates how PersistentVolumeClaims should be bound.
@@ -563,3 +562,31 @@ const (
 	// URISchemeHTTPS means that the scheme used will be https://
 	URISchemeHTTPS URIScheme = "HTTPS"
 )
+
+//NodeSelectorOperator  A node selector operator is the set of operators that can be used in
+// a node selector requirement.
+type NodeSelectorOperator string
+
+// NodeSelector seletctors
+const (
+	NodeSelectorOpIn           NodeSelectorOperator = "In"
+	NodeSelectorOpNotIn        NodeSelectorOperator = "NotIn"
+	NodeSelectorOpExists       NodeSelectorOperator = "Exists"
+	NodeSelectorOpDoesNotExist NodeSelectorOperator = "DoesNotExist"
+	NodeSelectorOpGt           NodeSelectorOperator = "Gt"
+	NodeSelectorOpLt           NodeSelectorOperator = "Lt"
+)
+
+var nodeSelectorsOpers = map[NodeSelectorOperator]v1.NodeSelectorOperator{
+	NodeSelectorOpIn:           v1.NodeSelectorOpIn,
+	NodeSelectorOpNotIn:        v1.NodeSelectorOpNotIn,
+	NodeSelectorOpExists:       v1.NodeSelectorOpExists,
+	NodeSelectorOpDoesNotExist: v1.NodeSelectorOpDoesNotExist,
+	NodeSelectorOpGt:           v1.NodeSelectorOpGt,
+	NodeSelectorOpLt:           v1.NodeSelectorOpLt,
+}
+
+// ToK8s local NodeSelectorOperator to kubernetes NodeSelectorOperator
+func (ns NodeSelectorOperator) ToK8s() v1.NodeSelectorOperator {
+	return nodeSelectorsOpers[ns]
+}

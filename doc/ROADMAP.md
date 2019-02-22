@@ -28,3 +28,7 @@ This document defines the roadmap for Beku development.
 3. 支持User,Group,SA三种方式到ClusterRole的绑定---ClusterRoleBinding
 
 
+## v0.1.3: (2019-02-18)
+
+1. 支持Deployment的NodeAffinity
+2. 支持StatefulSet的NodeAffinity

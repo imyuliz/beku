@@ -143,6 +143,41 @@ func (obj *StatefulSet) SetPodPriorityClass(priorityClassName string) *StatefulS
 	return obj
 }
 
+// SetRequiredORNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
+// A list of keys, many key do OR operation.
+func (obj *StatefulSet) SetRequiredORNodeAffinity(key string, value []string, operator NodeSelectorOperator) *StatefulSet {
+	nsRequirement := corev1.NodeSelectorRequirement{
+		Key:      key,
+		Operator: operator.ToK8s(),
+		Values:   value,
+	}
+	obj.error(setRequiredORNodeAffinity(&obj.sts.Spec.Template, nsRequirement))
+	return obj
+}
+
+// SetRequiredAndNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
+// A list of keys, many key do AND operation.
+func (obj *StatefulSet) SetRequiredAndNodeAffinity(key string, value []string, operator NodeSelectorOperator) *StatefulSet {
+	nsRequirement := corev1.NodeSelectorRequirement{
+		Key:      key,
+		Operator: operator.ToK8s(),
+		Values:   value,
+	}
+	obj.error(setRequiredAndNodeAffinity(&obj.sts.Spec.Template, nsRequirement))
+	return obj
+}
+
+// SetPreferredNodeAffinity set node affinity for PreferredDuringSchedulingIgnoredDuringExecution style
+func (obj *StatefulSet) SetPreferredNodeAffinity(weight int32, key string, value []string, operator NodeSelectorOperator) *StatefulSet {
+	nsRequirement := corev1.NodeSelectorRequirement{
+		Key:      key,
+		Operator: operator.ToK8s(),
+		Values:   value,
+	}
+	obj.error(setPreferredNodeAffinity(&obj.sts.Spec.Template, nsRequirement, weight))
+	return obj
+}
+
 func (obj *StatefulSet) error(err error) {
 	if obj.err != nil {
 		return

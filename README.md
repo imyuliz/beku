@@ -149,6 +149,11 @@ configMap | cm | core/v1
 storageClass | - | storage.k8s.io/v1
 pod | - | core/v1
 priorityClass | - | scheduling.k8s.io/v1beta1
+clusterRole | - | rbac.authorization.k8s.io/v1beta1
+clusterRoleBinding | - | rbac.authorization.k8s.io/v1beta1
+serviceAccount | sa | v1
+
+
 
 ### Beku Implementation Strategy
 

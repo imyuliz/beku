@@ -19,17 +19,89 @@ func setImagePullSecrets(podTemp *v1.PodTemplateSpec, secretName string) {
 	podTemp.Spec.ImagePullSecrets = append(podTemp.Spec.ImagePullSecrets, v1.LocalObjectReference{Name: secretName})
 }
 
-// func setNodeAffinity(podTemp *v1.PodTemplateSpec, nodeAffinity *v1.NodeAffinity) error {
-// 	if nodeAffinity == nil {
-// 		return errors.New("setNodeAffinity err, NodeAffinity is not allowed to be empty")
-// 	}
-// 	if podTemp.Spec.Affinity == nil {
-// 		podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: nodeAffinity}
-// 		return nil
-// 	}
-// 	podTemp.Spec.Affinity.NodeAffinity = nodeAffinity
-// 	return nil
-// }
+func setNodeAffinity(podTemp *v1.PodTemplateSpec, nodeAffinity *v1.NodeAffinity) error {
+	if nodeAffinity == nil {
+		return errors.New("setNodeAffinity err, NodeAffinity is not allowed to be empty")
+	}
+	if podTemp.Spec.Affinity == nil {
+		podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: nodeAffinity}
+		return nil
+	}
+	podTemp.Spec.Affinity.NodeAffinity = nodeAffinity
+	return nil
+}
+
+func setRequiredORNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.NodeSelectorRequirement) (err error) {
+	term := v1.NodeSelectorTerm{MatchExpressions: []v1.NodeSelectorRequirement{nsRequirement}}
+	if podTemp.Spec.Affinity != nil {
+		if podTemp.Spec.Affinity.NodeAffinity != nil {
+			if podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+				if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) > 0 {
+					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, term)
+					return
+				}
+				podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []v1.NodeSelectorTerm{term}
+				return
+			}
+			podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}
+			return
+		}
+		podTemp.Spec.Affinity.NodeAffinity = &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}
+		return
+	}
+	podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}}
+	return
+}
+
+func setRequiredAndNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.NodeSelectorRequirement) (err error) {
+	term := v1.NodeSelectorTerm{MatchExpressions: []v1.NodeSelectorRequirement{nsRequirement}}
+	if podTemp.Spec.Affinity != nil {
+		if podTemp.Spec.Affinity.NodeAffinity != nil {
+			if podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+				if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) > 0 {
+					if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions) > 0 {
+						podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions = append(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions, nsRequirement)
+						return
+					}
+					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions = []v1.NodeSelectorRequirement{nsRequirement}
+					return
+				}
+				podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []v1.NodeSelectorTerm{term}
+				return
+			}
+			podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}
+			return
+		}
+		podTemp.Spec.Affinity.NodeAffinity = &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}
+		return
+	}
+	podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}}
+	return
+}
+
+func setPreferredNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.NodeSelectorRequirement, weight int32) (err error) {
+	term := v1.PreferredSchedulingTerm{
+		Weight:     weight,
+		Preference: v1.NodeSelectorTerm{MatchExpressions: []v1.NodeSelectorRequirement{nsRequirement}},
+	}
+	if podTemp.Spec.Affinity != nil {
+		if podTemp.Spec.Affinity.NodeAffinity != nil {
+			if len(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
+				podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
+				return
+			}
+			podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []v1.PreferredSchedulingTerm{term}
+			return
+		}
+		podTemp.Spec.Affinity.NodeAffinity = &v1.NodeAffinity{PreferredDuringSchedulingIgnoredDuringExecution: []v1.PreferredSchedulingTerm{term}}
+		return
+	}
+
+	podTemp.Spec.Affinity = &v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{PreferredDuringSchedulingIgnoredDuringExecution: []v1.PreferredSchedulingTerm{term}},
+	}
+	return
+}
 
 // setContainer set container
 func setContainer(podTemp *v1.PodTemplateSpec, name, image string, containerPort int32) error {
