@@ -11,6 +11,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
+func setTolerations(podTemp *v1.PodTemplateSpec, toleration v1.Toleration) {
+	if len(podTemp.Spec.Tolerations) <= 0 {
+		podTemp.Spec.Tolerations = []v1.Toleration{toleration}
+		return
+	}
+	podTemp.Spec.Tolerations = append(podTemp.Spec.Tolerations, toleration)
+}
+
 func setImagePullSecrets(podTemp *v1.PodTemplateSpec, secretName string) {
 	if len(podTemp.Spec.ImagePullSecrets) <= 0 {
 		podTemp.Spec.ImagePullSecrets = []v1.LocalObjectReference{{Name: secretName}}

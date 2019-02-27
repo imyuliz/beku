@@ -590,3 +590,58 @@ var nodeSelectorsOpers = map[NodeSelectorOperator]v1.NodeSelectorOperator{
 func (ns NodeSelectorOperator) ToK8s() v1.NodeSelectorOperator {
 	return nodeSelectorsOpers[ns]
 }
+
+// TolerationOperator  A toleration operator is the set of operators that can be used in a toleration.
+type TolerationOperator string
+
+// TolerationOperator operators
+const (
+	TolerationOpExists TolerationOperator = "Exists"
+	TolerationOpEqual  TolerationOperator = "Equal"
+)
+
+var tolerationOperator = map[TolerationOperator]v1.TolerationOperator{
+	TolerationOpExists: v1.TolerationOpExists,
+	TolerationOpEqual:  v1.TolerationOpEqual,
+}
+
+// ToK8s local TolerationOperator to kubernetes TolerationOperator
+func (to TolerationOperator) ToK8s() v1.TolerationOperator {
+	return tolerationOperator[to]
+}
+
+// TaintEffect taint effect type
+type TaintEffect string
+
+// Taint Effects only NoSchedule,PreferNoSchedule,NoExecute
+const (
+	// Do not allow new pods to schedule onto the node unless they tolerate the taint,
+	// but allow all pods submitted to Kubelet without going through the scheduler
+	// to start, and allow all already-running pods to continue running.
+	// Enforced by the scheduler.
+	TaintEffectNoSchedule TaintEffect = "NoSchedule"
+	// Like TaintEffectNoSchedule, but the scheduler tries not to schedule
+	// new pods onto the node, rather than prohibiting new pods from scheduling
+	// onto the node entirely. Enforced by the scheduler.
+	TaintEffectPreferNoSchedule TaintEffect = "PreferNoSchedule"
+	// NOT YET IMPLEMENTED. TODO: Uncomment field once it is implemented.
+	// Like TaintEffectNoSchedule, but additionally do not allow pods submitted to
+	// Kubelet without going through the scheduler to start.
+	// Enforced by Kubelet and the scheduler.
+	// TaintEffectNoScheduleNoAdmit TaintEffect = "NoScheduleNoAdmit"
+
+	// Evict any already-running pods that do not tolerate the taint.
+	// Currently enforced by NodeController.
+	TaintEffectNoExecute TaintEffect = "NoExecute"
+)
+
+var taintEffects = map[TaintEffect]v1.TaintEffect{
+	TaintEffectNoSchedule:       v1.TaintEffectNoSchedule,
+	TaintEffectPreferNoSchedule: v1.TaintEffectPreferNoSchedule,
+	TaintEffectNoExecute:        v1.TaintEffectNoExecute,
+}
+
+// ToK8s local TaintEffect to kubernetes TaintEffect
+func (te TaintEffect) ToK8s() v1.TaintEffect {
+	return taintEffects[te]
+}

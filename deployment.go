@@ -443,6 +443,36 @@ func (obj *Deployment) SetRequiredAndNodeAffinity(key string, value []string, op
 	return obj
 }
 
+// SetToleration set Taints Tolerations
+// delayTimeSec  TolerationSeconds represents the period of time the toleration (which must be
+// of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+// it is not set, which means tolerate the taint forever (do not evict). Zero and
+// negative values will be treated as 0 (evict immediately) by the system.
+// +optional
+// operator default is Equal
+func (obj *Deployment) SetToleration(key, value string, operator TolerationOperator, effect TaintEffect, delayTimeSec ...int64) *Deployment {
+	var tolerationSeconds int64
+	toleration := corev1.Toleration{
+		Key:      key,
+		Value:    value,
+		Operator: operator.ToK8s(),
+		Effect:   effect.ToK8s(),
+	}
+	if len(delayTimeSec) > 0 && delayTimeSec[0] > 0 {
+		tolerationSeconds = delayTimeSec[0]
+	}
+	if effect == TaintEffectNoExecute {
+		toleration.TolerationSeconds = &tolerationSeconds
+	}
+
+	if operator == TolerationOpExists {
+		toleration.Value = ""
+	}
+
+	setTolerations(&obj.dp.Spec.Template, toleration)
+	return obj
+}
+
 // SetPreferredNodeAffinity set node affinity for PreferredDuringSchedulingIgnoredDuringExecution style
 func (obj *Deployment) SetPreferredNodeAffinity(weight int32, key string, value []string, operator NodeSelectorOperator) *Deployment {
 	nsRequirement := corev1.NodeSelectorRequirement{
