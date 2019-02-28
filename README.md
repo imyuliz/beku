@@ -152,6 +152,7 @@ priorityClass | - | scheduling.k8s.io/v1beta1
 clusterRole | - | rbac.authorization.k8s.io/v1beta1
 clusterRoleBinding | - | rbac.authorization.k8s.io/v1beta1
 serviceAccount | sa | v1
+node | - | v1
 
 
 
