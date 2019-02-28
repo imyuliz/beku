@@ -32,3 +32,9 @@ This document defines the roadmap for Beku development.
 
 1. 支持Deployment的NodeAffinity
 2. 支持StatefulSet的NodeAffinity
+
+
+## v0.1.3 (2019-02-28)
+
+1. 支持Deployment的污染容忍Toleration
+2. 支持Node资源对象
