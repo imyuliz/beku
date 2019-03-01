@@ -419,6 +419,13 @@ func (obj *Deployment) Apply() (*v1.Deployment, error) {
 	return client.AppsV1().Deployments(dp.GetNamespace()).Update(dp)
 }
 
+// DelNodeAffinity delete node affinitys
+// keys is delete key list
+func (obj *Deployment) DelNodeAffinity(keys []string) *Deployment {
+	delNodeAffinity(&obj.dp.Spec.Template, keys)
+	return obj
+}
+
 // SetRequiredORNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
 // A list of keys, many key do OR operation.
 func (obj *Deployment) SetRequiredORNodeAffinity(key string, value []string, operator NodeSelectorOperator) *Deployment {

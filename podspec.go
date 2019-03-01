@@ -39,13 +39,106 @@ func setNodeAffinity(podTemp *v1.PodTemplateSpec, nodeAffinity *v1.NodeAffinity)
 	return nil
 }
 
+// delNodeAffinity delete node affinity
+func delNodeAffinity(podTemp *v1.PodTemplateSpec, keys []string) error {
+	if podTemp.Spec.Affinity != nil {
+		if podTemp.Spec.Affinity.NodeAffinity != nil {
+			if podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+				if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) > 0 {
+					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms =
+						delNodeSelectorTerms(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, keys)
+
+				}
+			}
+			// PreferredDuringSchedulingIgnoredDuringExecution
+			if len(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
+				podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution =
+					delPreferkeys(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, keys)
+			}
+		}
+	}
+	return nil
+}
+
+var (
+	tempTerm = v1.NodeSelectorTerm{}
+)
+
+func delPreferkeys(terms []v1.PreferredSchedulingTerm, keys []string) []v1.PreferredSchedulingTerm {
+	targents := terms[:0]
+	for i := range terms {
+		if reflect.DeepEqual(terms[i], tempTerm) {
+			continue
+		}
+		reqs := delMatchExpressions(terms[i].Preference.MatchExpressions, keys)
+		if len(terms[i].Preference.MatchFields) <= 0 && len(reqs) <= 0 {
+			continue
+		}
+		targents = append(targents, v1.PreferredSchedulingTerm{
+			Weight: terms[i].Weight,
+			Preference: v1.NodeSelectorTerm{
+				MatchExpressions: reqs,
+				MatchFields:      terms[i].Preference.MatchFields,
+			}})
+	}
+	if len(targents) <= 0 {
+		return nil
+	}
+	return targents
+}
+
+func delNodeSelectorTerms(terms []v1.NodeSelectorTerm, keys []string) []v1.NodeSelectorTerm {
+	if len(terms) <= 0 {
+		return nil
+	}
+	targents := []v1.NodeSelectorTerm{}
+	for i := range terms {
+		if len(terms[i].MatchExpressions) > 0 {
+			reqs := delMatchExpressions(terms[i].MatchExpressions, keys)
+			if len(reqs) > 0 {
+				targents = append(targents, v1.NodeSelectorTerm{MatchExpressions: reqs, MatchFields: terms[i].MatchFields})
+				continue
+			}
+			if len(terms[i].MatchFields) <= 0 {
+				continue
+			}
+			targents = append(targents, v1.NodeSelectorTerm{MatchFields: terms[i].MatchFields})
+
+		}
+	}
+	if len(targents) > 0 {
+		return targents
+	}
+	return nil
+}
+
+func delMatchExpressions(reqs []v1.NodeSelectorRequirement, keys []string) []v1.NodeSelectorRequirement {
+	targents := []v1.NodeSelectorRequirement{}
+	for i := range reqs {
+		if !requirementKeyExist(keys, reqs[i].Key) {
+			targents = append(targents, reqs[i])
+		}
+	}
+	return targents
+}
+
+func requirementKeyExist(keys []string, key string) bool {
+	for i := range keys {
+		if keys[i] == key {
+			return true
+		}
+	}
+	return false
+}
+
 func setRequiredORNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.NodeSelectorRequirement) (err error) {
 	term := v1.NodeSelectorTerm{MatchExpressions: []v1.NodeSelectorRequirement{nsRequirement}}
 	if podTemp.Spec.Affinity != nil {
 		if podTemp.Spec.Affinity.NodeAffinity != nil {
 			if podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 				if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) > 0 {
-					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = append(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, term)
+					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms =
+						append(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, term)
 					return
 				}
 				podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []v1.NodeSelectorTerm{term}
@@ -54,10 +147,13 @@ func setRequiredORNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.Nod
 			podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}
 			return
 		}
-		podTemp.Spec.Affinity.NodeAffinity = &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}
+		podTemp.Spec.Affinity.NodeAffinity = &v1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}},
+		}
 		return
 	}
-	podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}}
+	podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: &v1.NodeAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}}
 	return
 }
 
@@ -68,10 +164,12 @@ func setRequiredAndNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.No
 			if podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
 				if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms) > 0 {
 					if len(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions) > 0 {
-						podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions = append(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions, nsRequirement)
+						podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions =
+							append(podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions, nsRequirement)
 						return
 					}
-					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions = []v1.NodeSelectorRequirement{nsRequirement}
+					podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions =
+						[]v1.NodeSelectorRequirement{nsRequirement}
 					return
 				}
 				podTemp.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []v1.NodeSelectorTerm{term}
@@ -83,7 +181,8 @@ func setRequiredAndNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.No
 		podTemp.Spec.Affinity.NodeAffinity = &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}
 		return
 	}
-	podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: &v1.NodeAffinity{RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}}
+	podTemp.Spec.Affinity = &v1.Affinity{NodeAffinity: &v1.NodeAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{NodeSelectorTerms: []v1.NodeSelectorTerm{term}}}}
 	return
 }
 
@@ -95,7 +194,8 @@ func setPreferredNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.Node
 	if podTemp.Spec.Affinity != nil {
 		if podTemp.Spec.Affinity.NodeAffinity != nil {
 			if len(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-				podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
+				podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution =
+					append(podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, term)
 				return
 			}
 			podTemp.Spec.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []v1.PreferredSchedulingTerm{term}
