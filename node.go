@@ -70,6 +70,18 @@ func (obj *Node) DelNodeLabels(labels map[string]string) *Node {
 	return obj
 }
 
+// SetAnnotations set Node annotations
+func (obj *Node) SetAnnotations(annotations map[string]string) *Node {
+	if len(obj.node.Annotations) <= 0 {
+		obj.node.Annotations = annotations
+		return obj
+	}
+	for key, value := range annotations {
+		obj.node.Annotations[key] = value
+	}
+	return obj
+}
+
 // SetTaints set Taint
 func (obj *Node) SetTaints(key, value string, effect TaintEffect) *Node {
 	taint := v1.Taint{
