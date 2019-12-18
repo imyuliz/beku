@@ -120,6 +120,12 @@ func (obj *StatefulSet) SetPodLabels(labels map[string]string) *StatefulSet {
 	return obj
 }
 
+// SetHostTime  绑定系统时间
+func (obj *StatefulSet) SetHostTime() *StatefulSet {
+	mountHostPath(&obj.sts.Spec.Template, "hostTime", "/etc/localtime", true)
+	return obj
+}
+
 // SetContainer set StatefulSet(sts) container
 // name:name is container name ,default ""
 // image:image is image name ,must input image

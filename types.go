@@ -645,3 +645,11 @@ var taintEffects = map[TaintEffect]v1.TaintEffect{
 func (te TaintEffect) ToK8s() v1.TaintEffect {
 	return taintEffects[te]
 }
+
+// Label Node Affinity label
+type Label struct {
+	Key      string
+	Value    string
+	Weight   int32
+	Operator NodeSelectorOperator
+}

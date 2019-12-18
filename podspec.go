@@ -211,6 +211,25 @@ func setPreferredNodeAffinity(podTemp *v1.PodTemplateSpec, nsRequirement v1.Node
 	return
 }
 
+// mountHostPath pod设置系统时间
+func mountHostPath(podTemp *v1.PodTemplateSpec, name, hostPath string, readyOnly bool) error {
+	volume := v1.Volume{Name: name, VolumeSource: v1.VolumeSource{HostPath: &v1.HostPathVolumeSource{Path: hostPath}}}
+	if len(podTemp.Spec.Volumes) <= 0 {
+		podTemp.Spec.Volumes = []v1.Volume{volume}
+	} else {
+		podTemp.Spec.Volumes = append(podTemp.Spec.Volumes, volume)
+	}
+	vmount := v1.VolumeMount{Name: name, MountPath: hostPath, ReadOnly: readyOnly}
+	for i := range podTemp.Spec.Containers {
+		if len(podTemp.Spec.Containers[i].VolumeMounts) <= 0 {
+			podTemp.Spec.Containers[i].VolumeMounts = []v1.VolumeMount{vmount}
+		} else {
+			podTemp.Spec.Containers[i].VolumeMounts = append(podTemp.Spec.Containers[i].VolumeMounts, vmount)
+		}
+	}
+	return nil
+}
+
 // setContainer set container
 func setContainer(podTemp *v1.PodTemplateSpec, name, image string, containerPort int32) error {
 	// This must be a valid port number, 0 < x < 65536.
@@ -442,6 +461,7 @@ func setLiveness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 	}
 	return nil
 }
+
 func setReadness(podTemp *v1.PodTemplateSpec, probe *v1.Probe) error {
 	if len(podTemp.Spec.Containers) <= 0 {
 		podTemp.Spec.Containers = []v1.Container{{ReadinessProbe: probe}}

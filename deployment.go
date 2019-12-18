@@ -134,6 +134,12 @@ func (obj *Deployment) SetHistoryLimit(limit int32) *Deployment {
 	return obj
 }
 
+// SetHostTime  绑定系统时间
+func (obj *Deployment) SetHostTime() *Deployment {
+	mountHostPath(&obj.dp.Spec.Template, "hostTime", "/etc/localtime", true)
+	return obj
+}
+
 // SetHTTPLiveness set container liveness of http style
 // port: required
 // path: http request URL,eg: /api/v1/posts/1
@@ -426,6 +432,14 @@ func (obj *Deployment) DelNodeAffinity(keys []string) *Deployment {
 	return obj
 }
 
+// PatchSetRequiredORNodeAffinity patch set node affinitys for RequiredDuringSchedulingIgnoredDuringExecution style
+func (obj *Deployment) PatchSetRequiredORNodeAffinity(labels []*Label) *Deployment {
+	for i := range labels {
+		obj.SetRequiredORNodeAffinity(labels[i].Key, []string{labels[i].Value}, labels[i].Operator)
+	}
+	return obj
+}
+
 // SetRequiredORNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
 // A list of keys, many key do OR operation.
 func (obj *Deployment) SetRequiredORNodeAffinity(key string, value []string, operator NodeSelectorOperator) *Deployment {
@@ -438,7 +452,15 @@ func (obj *Deployment) SetRequiredORNodeAffinity(key string, value []string, ope
 	return obj
 }
 
-// SetRequiredAndNodeAffinity set node affinity  for RequiredDuringSchedulingIgnoredDuringExecution style
+// PatchSetRequiredAndNodeAffinity patch set node affinitys for RequiredDuringSchedulingIgnoredDuringExecution style
+func (obj *Deployment) PatchSetRequiredAndNodeAffinity(labels []*Label) *Deployment {
+	for i := range labels {
+		obj.SetRequiredAndNodeAffinity(labels[i].Key, []string{labels[i].Value}, labels[i].Operator)
+	}
+	return obj
+}
+
+// SetRequiredAndNodeAffinity set node affinity for RequiredDuringSchedulingIgnoredDuringExecution style
 // A list of keys, many key do AND operation.
 func (obj *Deployment) SetRequiredAndNodeAffinity(key string, value []string, operator NodeSelectorOperator) *Deployment {
 	nsRequirement := corev1.NodeSelectorRequirement{
@@ -477,6 +499,14 @@ func (obj *Deployment) SetToleration(key, value string, operator TolerationOpera
 	}
 
 	setTolerations(&obj.dp.Spec.Template, toleration)
+	return obj
+}
+
+// PatchSetPreferredNodeAffinity  patch set node affinitys for PreferredDuringSchedulingIgnoredDuringExecution style
+func (obj *Deployment) PatchSetPreferredNodeAffinity(labels []*Label) *Deployment {
+	for i := range labels {
+		obj.SetPreferredNodeAffinity(labels[i].Weight, labels[i].Key, []string{labels[i].Value}, labels[i].Operator)
+	}
 	return obj
 }
 
